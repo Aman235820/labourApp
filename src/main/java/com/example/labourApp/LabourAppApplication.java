@@ -1,12 +1,14 @@
 package com.example.labourApp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
+@EnableAsync
 public class LabourAppApplication {
 
 	public static void main(String[] args) {
@@ -15,7 +17,11 @@ public class LabourAppApplication {
 
 	@Bean
 	public ModelMapper modelMapper(){
-		 return new ModelMapper();
+		ModelMapper modelMapper = new ModelMapper();
+		modelMapper.getConfiguration()
+				.setMatchingStrategy(MatchingStrategies.STRICT)
+				.setPropertyCondition(context -> context.getSource() != null);
+		return modelMapper;
 	}
 
 

@@ -1,8 +1,10 @@
+com\example\labourApp\Controller\LabourController.class
 com\example\labourApp\Repository\LabourRepository.class
 com\example\labourApp\Service\LabourService.class
 com\example\labourApp\Models\LabourDTO.class
 com\example\labourApp\Models\ResponseDTO.class
-Controller\LabourController.class
 com\example\labourApp\Entity\Labour.class
+com\example\labourApp\Controller\CategoryController.class
 com\example\labourApp\LabourAppApplication.class
+com\example\labourApp\Controller\UserController.class
 com\example\labourApp\Service\ServiceImpl\LabourServiceImpl.class
