@@ -12,4 +12,6 @@ public interface LabourService {
        CompletableFuture<ResponseDTO> findLabourByCategory(String category);
 
        CompletableFuture<ResponseDTO> findAllLabours();
+
+       CompletableFuture<ResponseDTO> findLabour(Integer labourId);
 }

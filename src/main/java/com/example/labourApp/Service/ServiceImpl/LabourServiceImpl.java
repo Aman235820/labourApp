@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Data
@@ -20,13 +21,6 @@ public class LabourServiceImpl implements LabourService {
     @Autowired
     private LabourRepository labourRepository;
 
-    private Labour mapDtoToEntity(LabourDTO dto) {
-        Labour labour = new Labour();
-        labour.setLabourName(dto.getLabourName());
-        labour.setLabourSkill(dto.getLabourSkill());
-        labour.setLabourMobileNo(dto.getLabourMobileNo());
-        return labour;
-    }
 
     @Async
     public CompletableFuture<ResponseDTO> registerLabour(LabourDTO details) {
@@ -40,6 +34,7 @@ public class LabourServiceImpl implements LabourService {
 
     }
 
+    @Async
     public CompletableFuture<ResponseDTO> findLabourByCategory(String category) {
 
         List<Labour> labourList = labourRepository.findByLabourSkill(category);
@@ -48,11 +43,36 @@ public class LabourServiceImpl implements LabourService {
 
     }
 
+    @Async
     public CompletableFuture<ResponseDTO> findAllLabours() {
         List<Labour> labourList = labourRepository.findAll();
         return CompletableFuture.completedFuture(new ResponseDTO(labourList, false, "Fetched successfully"));
+    }
+
+    @Async
+    public CompletableFuture<ResponseDTO> findLabour(Integer labourId){
+        Optional<Labour> labour = labourRepository.findById(labourId);
+        if(labour.isPresent()){
+             return CompletableFuture.completedFuture(new ResponseDTO(labour.get(), false, "Fetched successfully"));
+        }
+
+        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Unable to fetch !!"));
 
     }
+
+
+
+    private Labour mapDtoToEntity(LabourDTO dto) {
+        Labour labour = new Labour();
+        labour.setLabourName(dto.getLabourName());
+        labour.setLabourSkill(dto.getLabourSkill());
+        labour.setLabourMobileNo(dto.getLabourMobileNo());
+        labour.setRating(dto.getRating());
+        labour.setRatingCount(dto.getRatingCount());
+        return labour;
+    }
+
+
 
 
 }

@@ -6,17 +6,14 @@ import com.example.labourApp.Service.LabourService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/app")
-public class CategoryController {
+public class LabourReqController {
 
     @Autowired
     private LabourService labourService;
@@ -47,6 +44,20 @@ public class CategoryController {
             }
         };
     }
+
+    @GetMapping("getLabourById/{labourId}")
+    public Callable<ResponseEntity<ResponseDTO>> getLabourById(@PathVariable Integer labourId){
+        return () -> {
+            try {
+                CompletableFuture<ResponseDTO> response = labourService.findLabour(labourId);
+                return new ResponseEntity<>(response.get(), HttpStatus.OK);
+
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to get data"), HttpStatus.BAD_REQUEST);
+            }
+        };
+    }
+
 
 
 }

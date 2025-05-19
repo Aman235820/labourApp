@@ -22,6 +22,8 @@ public class Labour {
 
     private String labourMobileNo;
 
+    private String rating;
+    private String ratingCount;
 
     // Getter and Setter for labourName
     public String getLabourName() {
@@ -50,6 +52,24 @@ public class Labour {
         this.labourMobileNo = labourMobileNo;
     }
 
+    // Getter and Setter for rating
+    public String getRating() {
+        return rating;
+    }
+
+    public void setRating(String rating) {
+        this.rating = rating;
+    }
+
+    // Getter and Setter for ratingCount
+    public String getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(String ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
     @Override
     public String toString() {
         return "Labour{" +
@@ -57,6 +77,8 @@ public class Labour {
                 ", labourName='" + labourName + '\'' +
                 ", labourSkill='" + labourSkill + '\'' +
                 ", labourMobileNo=" + labourMobileNo +
+                ", rating='" + rating + '\'' +
+                ", ratingCount='" + ratingCount + '\'' +
                 '}';
     }
 }
