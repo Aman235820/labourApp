@@ -1,6 +1,7 @@
 package com.example.labourApp.Service.ServiceImpl;
 
 import com.example.labourApp.Entity.Labour;
+import com.example.labourApp.Entity.Review;
 import com.example.labourApp.Entity.User;
 import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.ResponseDTO;
@@ -14,11 +15,13 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -86,16 +89,13 @@ public class UserServiceImpl implements UserService {
                         );
                     }
 
-                    return calculateFinalRating(optionalLabour.get(), rating, review)
+                    return calculateFinalRating(optionalLabour.get(), reqBody)
                             .thenCompose(updatedLabour ->
                                     CompletableFuture.supplyAsync(() -> {
                                         try {
                                             labourRepository.save(updatedLabour);
-                                            return new ResponseDTO(
-                                                    mapper.convertValue(updatedLabour, LabourDTO.class),
-                                                    false,
-                                                    "Rated Successfully"
-                                            );
+                                            LabourDTO dto = mapEntityToDto(updatedLabour);
+                                            return new ResponseDTO(dto, false, "Rated Successfully");
                                         } catch (Exception e) {
                                             return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
                                         }
@@ -107,9 +107,14 @@ public class UserServiceImpl implements UserService {
                 );
     }
 
-    public CompletableFuture<Labour> calculateFinalRating(Labour labour, double rating, String review) {
+    public CompletableFuture<Labour> calculateFinalRating(Labour labour, Map<String,Object> reqBody) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                Integer userId = (Integer) reqBody.get("userId");
+                Integer labourId = (Integer) reqBody.get("labourId");
+                double rating = (Double) reqBody.get("labourRating");
+                String review = (String) reqBody.get("review");
+
                 String ratingCountStr = labour.getRatingCount();
                 String ratingStr = labour.getRating();
 
@@ -130,7 +135,12 @@ public class UserServiceImpl implements UserService {
                 labour.setRating(Double.toString(roundedstoredRating));
                 labour.setRatingCount(Integer.toString(storedRatingCount + 1));
                 if (review!=null) {
-                    labour.setReviews(review);
+                    Review newReview = new Review();
+                    newReview.setUserId(userId);
+                    newReview.setRating(rating);
+                    newReview.setReview(review);
+                    newReview.setLabour(labour);
+                    labour.addReviews(newReview);
                 }
 
                 return labour;
@@ -140,5 +150,18 @@ public class UserServiceImpl implements UserService {
         }, executorService);
     }
 
+    private LabourDTO mapEntityToDto(Labour labour) {
+        LabourDTO dto = new LabourDTO();
+        dto.setLabourId(labour.getLabourId());
+        dto.setLabourName(labour.getLabourName());
+        dto.setLabourSkill(labour.getLabourSkill());
+        dto.setLabourMobileNo(labour.getLabourMobileNo());
+        dto.setRating(labour.getRating());
+        dto.setRatingCount(labour.getRatingCount());
+        dto.setReviews(labour.getReviews());
+
+        return dto;
+
+    }
 
 }

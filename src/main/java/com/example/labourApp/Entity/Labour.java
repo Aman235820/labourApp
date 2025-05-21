@@ -2,10 +2,7 @@ package com.example.labourApp.Entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +24,19 @@ public class Labour {
     private String rating;
     private String ratingCount;
 
-    private List<String> reviews;
+    @OneToMany(mappedBy = "labour", cascade = CascadeType.ALL, orphanRemoval = true , fetch = FetchType.EAGER)
+    private List<Review> reviews = new ArrayList<>();
+
+
+    // Getter and Setter for labourId
+    public Integer getLabourId() {
+        return labourId;
+    }
+
+    public void setLabourId(Integer labourId) {
+        this.labourId = labourId;
+    }
+
 
     // Getter and Setter for labourName
     public String getLabourName() {
@@ -75,27 +84,19 @@ public class Labour {
     }
 
     // Getter and Setter for reviews
-    public List<String> getReviews() {
+    public List<Review> getReviews() {
         return reviews;
     }
 
-    public void setReviews(String reviews) {
+    public void addReviews(Review review) {
         if (this.reviews == null) {
             this.reviews = new ArrayList<>();
         }
-        this.reviews.add(reviews);
+        this.reviews.add(review);
     }
 
-    @Override
-    public String toString() {
-        return "Labour{" +
-                "labourId=" + labourId +
-                ", labourName='" + labourName + '\'' +
-                ", labourSkill='" + labourSkill + '\'' +
-                ", labourMobileNo='" + labourMobileNo + '\'' +
-                ", rating='" + rating + '\'' +
-                ", ratingCount='" + ratingCount + '\'' +
-                ", reviews=" + (reviews != null ? String.join(", ", reviews) : "null") +
-                '}';
+    public void setReviews(List<Review> list) {
+        this.reviews = list;
     }
+
 }

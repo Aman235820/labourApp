@@ -1,5 +1,6 @@
 package com.example.labourApp.Models;
 
+import com.example.labourApp.Entity.Review;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
@@ -28,8 +29,16 @@ public class LabourDTO {
 
     private String ratingCount;
 
+    private List<Review> reviews;
 
-    private List<String> reviews;
+    // Getter and Setter for labourId
+    public Integer getLabourId() {
+        return labourId;
+    }
+
+    public void setLabourId(Integer labourId) {
+        this.labourId = labourId;
+    }
 
     // Getter and Setter for labourName
     public String getLabourName() {
@@ -77,13 +86,11 @@ public class LabourDTO {
     }
 
     // Getter and Setter for reviews
-    public List<String> getReviews() {
+    public List<Review> getReviews() {
         return reviews;
     }
 
-    public void setReviews(List<String> reviews) {
-          this.reviews = reviews;
+    public void setReviews(List<Review> reviews) {
+        this.reviews = reviews;
     }
-
-
 }
