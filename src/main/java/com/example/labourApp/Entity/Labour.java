@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -24,6 +26,8 @@ public class Labour {
 
     private String rating;
     private String ratingCount;
+
+    private List<String> reviews;
 
     // Getter and Setter for labourName
     public String getLabourName() {
@@ -70,15 +74,28 @@ public class Labour {
         this.ratingCount = ratingCount;
     }
 
+    // Getter and Setter for reviews
+    public List<String> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(String reviews) {
+        if (this.reviews == null) {
+            this.reviews = new ArrayList<>();
+        }
+        this.reviews.add(reviews);
+    }
+
     @Override
     public String toString() {
         return "Labour{" +
                 "labourId=" + labourId +
                 ", labourName='" + labourName + '\'' +
                 ", labourSkill='" + labourSkill + '\'' +
-                ", labourMobileNo=" + labourMobileNo +
+                ", labourMobileNo='" + labourMobileNo + '\'' +
                 ", rating='" + rating + '\'' +
                 ", ratingCount='" + ratingCount + '\'' +
+                ", reviews=" + (reviews != null ? String.join(", ", reviews) : "null") +
                 '}';
     }
 }

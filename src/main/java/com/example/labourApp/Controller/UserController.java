@@ -60,11 +60,8 @@ public class UserController {
 
             try {
 
-
                 CompletableFuture<ResponseDTO> res = userService.rateLabour(reqBody);
-
                 return new ResponseEntity<>(res.get(), HttpStatus.OK);
-
             } catch (Exception ce) {
                 return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
             }

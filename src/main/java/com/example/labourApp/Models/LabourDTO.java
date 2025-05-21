@@ -3,7 +3,10 @@ package com.example.labourApp.Models;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -24,6 +27,9 @@ public class LabourDTO {
     private String rating;
 
     private String ratingCount;
+
+
+    private List<String> reviews;
 
     // Getter and Setter for labourName
     public String getLabourName() {
@@ -69,4 +75,15 @@ public class LabourDTO {
     public void setLabourMobileNo(String labourMobileNo) {
         this.labourMobileNo = labourMobileNo;
     }
+
+    // Getter and Setter for reviews
+    public List<String> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(List<String> reviews) {
+          this.reviews = reviews;
+    }
+
+
 }

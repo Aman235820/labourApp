@@ -77,36 +77,37 @@ public class UserServiceImpl implements UserService {
         double rating = (Double) reqBody.get("labourRating");
         String review = (String) reqBody.get("review");
 
-        return CompletableFuture.supplyAsync(() -> 
-            labourRepository.findById(labourId), executorService)
-            .thenCompose(optionalLabour -> {
-                if (optionalLabour.isEmpty()) {
-                    return CompletableFuture.completedFuture(
-                        new ResponseDTO(null, true, "Labour not found")
-                    );
-                }
-                return calculateFinalRating(optionalLabour.get(), rating)
-                    .thenCompose(updatedLabour -> 
-                        CompletableFuture.supplyAsync(() -> {
-                            try {
-                                labourRepository.save(updatedLabour);
-                                return new ResponseDTO(
-                                    mapper.convertValue(updatedLabour, LabourDTO.class),
-                                    false,
-                                    "Rated Successfully"
-                                );
-                            } catch (Exception e) {
-                                return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
-                            }
-                        }, executorService)
-                    );
-            })
-            .exceptionally(throwable -> 
-                new ResponseDTO(null, true, "Failed to process rating: " + throwable.getMessage())
-            );
+        return CompletableFuture.supplyAsync(() ->
+                        labourRepository.findById(labourId), executorService)
+                .thenCompose(optionalLabour -> {
+                    if (optionalLabour.isEmpty()) {
+                        return CompletableFuture.completedFuture(
+                                new ResponseDTO(null, true, "Labour not found")
+                        );
+                    }
+
+                    return calculateFinalRating(optionalLabour.get(), rating, review)
+                            .thenCompose(updatedLabour ->
+                                    CompletableFuture.supplyAsync(() -> {
+                                        try {
+                                            labourRepository.save(updatedLabour);
+                                            return new ResponseDTO(
+                                                    mapper.convertValue(updatedLabour, LabourDTO.class),
+                                                    false,
+                                                    "Rated Successfully"
+                                            );
+                                        } catch (Exception e) {
+                                            return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
+                                        }
+                                    }, executorService)
+                            );
+                })
+                .exceptionally(throwable ->
+                        new ResponseDTO(null, true, "Failed to process rating: " + throwable.getMessage())
+                );
     }
 
-    public CompletableFuture<Labour> calculateFinalRating(Labour labour, double rating) {
+    public CompletableFuture<Labour> calculateFinalRating(Labour labour, double rating, String review) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String ratingCountStr = labour.getRatingCount();
@@ -128,6 +129,9 @@ public class UserServiceImpl implements UserService {
 
                 labour.setRating(Double.toString(roundedstoredRating));
                 labour.setRatingCount(Integer.toString(storedRatingCount + 1));
+                if (review!=null) {
+                    labour.setReviews(review);
+                }
 
                 return labour;
             } catch (Exception e) {
