@@ -12,13 +12,20 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Data
 @Service
 public class LabourServiceImpl implements LabourService {
+
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+
 
     @Autowired
     private LabourRepository labourRepository;
@@ -51,23 +58,94 @@ public class LabourServiceImpl implements LabourService {
     @Async
     public CompletableFuture<ResponseDTO> findLabour(Integer labourId) {
         Optional<Labour> labour = labourRepository.findById(labourId);
-        if(labour.isPresent()) {
+        if (labour.isPresent()) {
             LabourDTO dto = mapEntityToDto(labour.get());
             return CompletableFuture.completedFuture(new ResponseDTO(dto, false, "Fetched successfully"));
         }
         return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Unable to fetch !!"));
     }
 
-    private Labour mapDtoToEntity(LabourDTO dto) {
-        Labour labour = new Labour();
-        labour.setLabourName(dto.getLabourName());
-        labour.setLabourSkill(dto.getLabourSkill());
-        labour.setLabourMobileNo(dto.getLabourMobileNo());
-        labour.setRating(dto.getRating());
-        labour.setRatingCount(dto.getRatingCount());
-        labour.setReviews(dto.getReviews());
-        return labour;
+
+    @Async
+    public CompletableFuture<ResponseDTO> rateLabour(Map<String, Object> reqBody) {
+        Integer userId = (Integer) reqBody.get("userId");
+        Integer labourId = (Integer) reqBody.get("labourId");
+        double rating = (Double) reqBody.get("labourRating");
+        String review = (String) reqBody.get("review");
+
+        return CompletableFuture.supplyAsync(() ->
+                        labourRepository.findById(labourId), executorService)
+                .thenCompose(optionalLabour -> {
+                    if (optionalLabour.isEmpty()) {
+                        return CompletableFuture.completedFuture(
+                                new ResponseDTO(null, true, "Labour not found")
+                        );
+                    }
+
+                    return calculateFinalRating(optionalLabour.get(), reqBody)
+                            .thenCompose(updatedLabour ->
+                                    CompletableFuture.supplyAsync(() -> {
+                                        try {
+                                            labourRepository.save(updatedLabour);
+                                            LabourDTO dto = mapEntityToDto(updatedLabour);
+                                            return new ResponseDTO(dto, false, "Rated Successfully");
+                                        } catch (Exception e) {
+                                            return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
+                                        }
+                                    }, executorService)
+                            );
+                })
+                .exceptionally(throwable ->
+                        new ResponseDTO(null, true, "Failed to process rating: " + throwable.getMessage())
+                );
     }
+
+    @Async
+    public CompletableFuture<Labour> calculateFinalRating(Labour labour, Map<String, Object> reqBody) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Integer userId = (Integer) reqBody.get("userId");
+                Integer labourId = (Integer) reqBody.get("labourId");
+                double rating = (Double) reqBody.get("labourRating");
+                String review = (String) reqBody.get("review");
+
+                rating = Math.round(rating * 10) / 10.0;
+
+                String ratingCountStr = labour.getRatingCount();
+                String ratingStr = labour.getRating();
+
+                int storedRatingCount = 0;
+                double storedRating = 0.0;
+
+                if (ratingCountStr != null && !ratingCountStr.isEmpty()) {
+                    storedRatingCount = Integer.parseInt(ratingCountStr);
+                }
+
+                if (ratingStr != null && !ratingStr.isEmpty()) {
+                    storedRating = Double.parseDouble(ratingStr);
+                }
+
+                storedRating = ((storedRating * storedRatingCount) + rating) / (storedRatingCount + 1);
+                double roundedstoredRating = Math.round(storedRating * 10) / 10.0;
+
+                labour.setRating(Double.toString(roundedstoredRating));
+                labour.setRatingCount(Integer.toString(storedRatingCount + 1));
+                if (review != null) {
+                    Review newReview = new Review();
+                    newReview.setUserId(userId);
+                    newReview.setRating(rating);
+                    newReview.setReview(review);
+                    newReview.setLabour(labour);
+                    labour.addReviews(newReview);
+                }
+
+                return labour;
+            } catch (Exception e) {
+                throw new RuntimeException("Error calculating rating: " + e.getMessage());
+            }
+        }, executorService);
+    }
+
 
     private LabourDTO mapEntityToDto(Labour labour) {
         LabourDTO dto = new LabourDTO();
@@ -81,6 +159,17 @@ public class LabourServiceImpl implements LabourService {
 
         return dto;
 
+    }
+
+    private Labour mapDtoToEntity(LabourDTO dto) {
+        Labour labour = new Labour();
+        labour.setLabourName(dto.getLabourName());
+        labour.setLabourSkill(dto.getLabourSkill());
+        labour.setLabourMobileNo(dto.getLabourMobileNo());
+        labour.setRating(dto.getRating());
+        labour.setRatingCount(dto.getRatingCount());
+        labour.setReviews(dto.getReviews());
+        return labour;
     }
 }
 

@@ -3,6 +3,7 @@ package com.example.labourApp.Service;
 import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.ResponseDTO;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public interface LabourService {
@@ -12,6 +13,10 @@ public interface LabourService {
        CompletableFuture<ResponseDTO> findLabourByCategory(String category);
 
        CompletableFuture<ResponseDTO> findAllLabours();
+
+
+       CompletableFuture<ResponseDTO> rateLabour(Map<String, Object> reqBody);
+
 
        CompletableFuture<ResponseDTO> findLabour(Integer labourId);
 }

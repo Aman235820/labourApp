@@ -2,6 +2,7 @@ package com.example.labourApp.Controller;
 
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Models.UserDTO;
+import com.example.labourApp.Service.LabourService;
 import com.example.labourApp.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private LabourService labourService;
 
     @PostMapping("/userLogin")
     public Callable<ResponseEntity<ResponseDTO>> userLogin(@RequestBody UserDTO request) {
@@ -62,11 +66,11 @@ public class UserController {
 
                 double ratingNumber = (double) reqBody.get("labourRating");
 
-                if(ratingNumber<0 || ratingNumber>5){
-                       throw new Exception("Rate between 0 to 5 only !!");
+                if (ratingNumber < 0 || ratingNumber > 5) {
+                    throw new Exception("Rate between 0 to 5 only !!");
                 }
 
-                CompletableFuture<ResponseDTO> res = userService.rateLabour(reqBody);
+                CompletableFuture<ResponseDTO> res = labourService.rateLabour(reqBody);
                 return new ResponseEntity<>(res.get(), HttpStatus.OK);
             } catch (Exception ce) {
                 return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);

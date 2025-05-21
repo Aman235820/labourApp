@@ -12,6 +12,4 @@ public interface UserService {
 
     CompletableFuture<ResponseDTO> loginUser(UserDTO request);
 
-    CompletableFuture<ResponseDTO> rateLabour(Map<String, Object> reqBody);
-
 }
