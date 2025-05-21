@@ -15,13 +15,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -114,6 +112,8 @@ public class UserServiceImpl implements UserService {
                 Integer labourId = (Integer) reqBody.get("labourId");
                 double rating = (Double) reqBody.get("labourRating");
                 String review = (String) reqBody.get("review");
+
+                rating = Math.round(rating * 10) / 10.0;
 
                 String ratingCountStr = labour.getRatingCount();
                 String ratingStr = labour.getRating();

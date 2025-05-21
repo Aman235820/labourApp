@@ -60,6 +60,12 @@ public class UserController {
 
             try {
 
+                double ratingNumber = (double) reqBody.get("labourRating");
+
+                if(ratingNumber<0 || ratingNumber>5){
+                       throw new Exception("Rate between 0 to 5 only !!");
+                }
+
                 CompletableFuture<ResponseDTO> res = userService.rateLabour(reqBody);
                 return new ResponseEntity<>(res.get(), HttpStatus.OK);
             } catch (Exception ce) {
