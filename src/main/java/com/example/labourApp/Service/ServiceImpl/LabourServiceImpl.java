@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,7 +63,7 @@ public class LabourServiceImpl implements LabourService {
 
         Sort sort = sortOrder.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        Pageable p = PageRequest.of(pageNumber,pageSize , sort);
+        Pageable p = PageRequest.of(pageNumber, pageSize, sort);
 
         Page<Labour> pageLabour = this.labourRepository.findAll(p);
 
@@ -71,8 +72,8 @@ public class LabourServiceImpl implements LabourService {
         List<LabourDTO> dtoList = labourList.stream()
                 .map(this::mapEntityToDto)
                 .collect(Collectors.toList());
-        return CompletableFuture.completedFuture(new PaginationResponseDTO(dtoList, pageLabour.getNumber(),  pageLabour.getSize() ,
-                pageLabour.getTotalElements() , pageLabour.getTotalPages() , pageLabour.isLast()));
+        return CompletableFuture.completedFuture(new PaginationResponseDTO(dtoList, pageLabour.getNumber(), pageLabour.getSize(),
+                pageLabour.getTotalElements(), pageLabour.getTotalPages(), pageLabour.isLast()));
     }
 
     @Async
@@ -123,47 +124,53 @@ public class LabourServiceImpl implements LabourService {
     @Async
     public CompletableFuture<Labour> calculateFinalRating(Labour labour, Map<String, Object> reqBody) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                Integer userId = (Integer) reqBody.get("userId");
-                Integer labourId = (Integer) reqBody.get("labourId");
-                double rating = (Double) reqBody.get("labourRating");
-                String review = (String) reqBody.get("review");
+                    Integer userId = (Integer) reqBody.get("userId");
+                    Integer labourId = (Integer) reqBody.get("labourId");
+                    double rating = (Double) reqBody.get("labourRating");
+                    String review = (String) reqBody.get("review");
 
-                rating = Math.round(rating * 10) / 10.0;
+                    rating = Math.round(rating * 10) / 10.0;
 
-                String ratingCountStr = labour.getRatingCount();
-                String ratingStr = labour.getRating();
+                    String ratingCountStr = labour.getRatingCount();
+                    String ratingStr = labour.getRating();
 
-                int storedRatingCount = 0;
-                double storedRating = 0.0;
+                    int storedRatingCount = 0;
+                    double storedRating = 0.0;
 
-                if (ratingCountStr != null && !ratingCountStr.isEmpty()) {
-                    storedRatingCount = Integer.parseInt(ratingCountStr);
-                }
+                    if (ratingCountStr != null && !ratingCountStr.isEmpty()) {
+                        storedRatingCount = Integer.parseInt(ratingCountStr);
+                    }
 
-                if (ratingStr != null && !ratingStr.isEmpty()) {
-                    storedRating = Double.parseDouble(ratingStr);
-                }
+                    if (ratingStr != null && !ratingStr.isEmpty()) {
+                        storedRating = Double.parseDouble(ratingStr);
+                    }
 
-                storedRating = ((storedRating * storedRatingCount) + rating) / (storedRatingCount + 1);
-                double roundedstoredRating = Math.round(storedRating * 10) / 10.0;
+                    storedRating = ((storedRating * storedRatingCount) + rating) / (storedRatingCount + 1);
+                    double roundedstoredRating = Math.round(storedRating * 10) / 10.0;
 
-                labour.setRating(Double.toString(roundedstoredRating));
-                labour.setRatingCount(Integer.toString(storedRatingCount + 1));
-                if (review != null) {
+                    return new Object[]{roundedstoredRating, storedRatingCount};
+                }, executorService)
+                .thenApply(params -> {
+                    Integer userId = (Integer) reqBody.get("userId");
+                    double rating = (Double) reqBody.get("labourRating");
+                    String review = (String) reqBody.get("review");
+
+                    double roundedstoredRating = (double) params[0];
+                    int storedRatingCount = (int) params[1];
+
+                    labour.setRating(Double.toString(roundedstoredRating));
+                    labour.setRatingCount(Integer.toString(storedRatingCount + 1));
+
                     Review newReview = new Review();
                     newReview.setUserId(userId);
                     newReview.setRating(rating);
                     newReview.setReview(review);
                     newReview.setLabour(labour);
+                    newReview.setReviewTime(LocalDate.now());
                     labour.addReviews(newReview);
-                }
 
-                return labour;
-            } catch (Exception e) {
-                throw new RuntimeException("Error calculating rating: " + e.getMessage());
-            }
-        }, executorService);
+                    return labour;
+                });
     }
 
 

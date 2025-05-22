@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
+import java.util.Date;
+
 @Data
 @Entity
 @Table(name = "reviews")
@@ -15,6 +18,8 @@ public class Review {
     private Integer userId;
     private Double rating;
     private String review;
+
+    private LocalDate reviewTime;
 
     @ManyToOne
     @JoinColumn(name = "labour_id")
@@ -67,4 +72,14 @@ public class Review {
     public void setLabour(Labour labour) {
         this.labour = labour;
     }
+
+    public LocalDate getReviewTime() {
+        return reviewTime;
+    }
+
+    public void setReviewTime(LocalDate time) {
+        this.reviewTime = time;
+    }
+
+
 } 
