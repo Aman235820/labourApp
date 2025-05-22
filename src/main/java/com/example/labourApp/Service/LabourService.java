@@ -1,6 +1,8 @@
 package com.example.labourApp.Service;
 
 import com.example.labourApp.Models.LabourDTO;
+import com.example.labourApp.Models.PaginationRequestDTO;
+import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
 
 import java.util.Map;
@@ -12,7 +14,7 @@ public interface LabourService {
 
        CompletableFuture<ResponseDTO> findLabourByCategory(String category);
 
-       CompletableFuture<ResponseDTO> findAllLabours();
+       CompletableFuture<PaginationResponseDTO> findAllLabours(PaginationRequestDTO paginationRequestDTO);
 
 
        CompletableFuture<ResponseDTO> rateLabour(Map<String, Object> reqBody);

@@ -3,11 +3,17 @@ package com.example.labourApp.Service.ServiceImpl;
 import com.example.labourApp.Entity.Labour;
 import com.example.labourApp.Entity.Review;
 import com.example.labourApp.Models.LabourDTO;
+import com.example.labourApp.Models.PaginationRequestDTO;
+import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Repository.LabourRepository;
 import com.example.labourApp.Service.LabourService;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -47,12 +53,26 @@ public class LabourServiceImpl implements LabourService {
     }
 
     @Async
-    public CompletableFuture<ResponseDTO> findAllLabours() {
-        List<Labour> labourList = labourRepository.findAll();
+    public CompletableFuture<PaginationResponseDTO> findAllLabours(PaginationRequestDTO paginationRequestDTO) {
+
+        Integer pageNumber = paginationRequestDTO.getPageNumber();
+        Integer pageSize = paginationRequestDTO.getPageSize();
+        String sortBy = paginationRequestDTO.getSortBy();
+        String sortOrder = paginationRequestDTO.getSortOrder();
+
+        Sort sort = sortOrder.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+
+        Pageable p = PageRequest.of(pageNumber,pageSize , sort);
+
+        Page<Labour> pageLabour = this.labourRepository.findAll(p);
+
+        List<Labour> labourList = pageLabour.getContent();
+
         List<LabourDTO> dtoList = labourList.stream()
                 .map(this::mapEntityToDto)
                 .collect(Collectors.toList());
-        return CompletableFuture.completedFuture(new ResponseDTO(dtoList, false, "Fetched successfully"));
+        return CompletableFuture.completedFuture(new PaginationResponseDTO(dtoList, pageLabour.getNumber(),  pageLabour.getSize() ,
+                pageLabour.getTotalElements() , pageLabour.getTotalPages() , pageLabour.isLast()));
     }
 
     @Async

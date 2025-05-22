@@ -1,6 +1,8 @@
 package com.example.labourApp.Controller;
 
 
+import com.example.labourApp.Models.PaginationRequestDTO;
+import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Service.LabourService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +22,7 @@ public class LabourReqController {
 
     @GetMapping("/findByCategory")
     public Callable<ResponseEntity<ResponseDTO>> findByCategory(@RequestParam String category) {
-        return()-> {
+        return () -> {
             try {
                 CompletableFuture<ResponseDTO> response = labourService.findLabourByCategory(category);
                 return new ResponseEntity<>(response.get(), HttpStatus.OK);
@@ -32,21 +34,23 @@ public class LabourReqController {
 
     }
 
-    @GetMapping("/getAllLabours")
-    public Callable<ResponseEntity<ResponseDTO>> getAllLabours() {
+    @PostMapping("/getAllLabours")
+    public Callable<ResponseEntity<PaginationResponseDTO>> getAllLabours(
+            @RequestBody PaginationRequestDTO paginationRequestDTO
+            ) {
         return () -> {
             try {
-                CompletableFuture<ResponseDTO> response = labourService.findAllLabours();
+                CompletableFuture<PaginationResponseDTO> response = labourService.findAllLabours(paginationRequestDTO);
                 return new ResponseEntity<>(response.get(), HttpStatus.OK);
 
             } catch (Exception ce) {
-                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to get data"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new PaginationResponseDTO("Failed to get data", 0, 0, 0, 0, true), HttpStatus.BAD_REQUEST);
             }
         };
     }
 
     @GetMapping("getLabourById/{labourId}")
-    public Callable<ResponseEntity<ResponseDTO>> getLabourById(@PathVariable Integer labourId){
+    public Callable<ResponseEntity<ResponseDTO>> getLabourById(@PathVariable Integer labourId) {
         return () -> {
             try {
                 CompletableFuture<ResponseDTO> response = labourService.findLabour(labourId);
@@ -57,7 +61,6 @@ public class LabourReqController {
             }
         };
     }
-
 
 
 }
