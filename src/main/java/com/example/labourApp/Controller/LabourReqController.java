@@ -20,15 +20,16 @@ public class LabourReqController {
     @Autowired
     private LabourService labourService;
 
-    @GetMapping("/findByCategory")
-    public Callable<ResponseEntity<ResponseDTO>> findByCategory(@RequestParam String category) {
+    @PostMapping("/findByCategory")
+    public Callable<ResponseEntity<PaginationResponseDTO>> findByCategory(@RequestParam String category,
+                                                                          @RequestBody PaginationRequestDTO paginationRequestDTO) {
         return () -> {
             try {
-                CompletableFuture<ResponseDTO> response = labourService.findLabourByCategory(category);
+                CompletableFuture<PaginationResponseDTO> response = labourService.findLabourByCategory(paginationRequestDTO, category);
                 return new ResponseEntity<>(response.get(), HttpStatus.OK);
 
             } catch (Exception ce) {
-                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to get data"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new PaginationResponseDTO(ce.getMessage(), 0, 0, 0, 0, true), HttpStatus.BAD_REQUEST);
             }
         };
 
@@ -37,7 +38,7 @@ public class LabourReqController {
     @PostMapping("/getAllLabours")
     public Callable<ResponseEntity<PaginationResponseDTO>> getAllLabours(
             @RequestBody PaginationRequestDTO paginationRequestDTO
-            ) {
+    ) {
         return () -> {
             try {
                 CompletableFuture<PaginationResponseDTO> response = labourService.findAllLabours(paginationRequestDTO);

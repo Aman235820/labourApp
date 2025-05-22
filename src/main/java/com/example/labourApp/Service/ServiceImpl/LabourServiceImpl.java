@@ -44,13 +44,27 @@ public class LabourServiceImpl implements LabourService {
         return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully Registered !!"));
     }
 
+
     @Async
-    public CompletableFuture<ResponseDTO> findLabourByCategory(String category) {
-        List<Labour> labourList = labourRepository.findByLabourSkill(category);
+    public CompletableFuture<PaginationResponseDTO> findLabourByCategory(PaginationRequestDTO paginationRequestDTO, String category) {
+
+        Integer pageNumber = paginationRequestDTO.getPageNumber();
+        Integer pageSize = paginationRequestDTO.getPageSize();
+        String sortBy = paginationRequestDTO.getSortBy();
+        String sortOrder = paginationRequestDTO.getSortOrder();
+
+        Sort sort = sortOrder.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+
+        Pageable p = PageRequest.of(pageNumber, pageSize, sort);
+
+        Page<Labour> labourListPage = labourRepository.findByLabourSkill(category, p);
+
+        List<Labour> labourList = labourListPage.getContent();
+
         List<LabourDTO> dtoList = labourList.stream()
                 .map(this::mapEntityToDto)
                 .collect(Collectors.toList());
-        return CompletableFuture.completedFuture(new ResponseDTO(dtoList, false, "Fetched successfully"));
+        return CompletableFuture.completedFuture(new PaginationResponseDTO(dtoList, labourListPage.getNumber(), labourListPage.getSize(), labourListPage.getTotalElements(), labourListPage.getTotalPages(), labourListPage.isLast()));
     }
 
     @Async

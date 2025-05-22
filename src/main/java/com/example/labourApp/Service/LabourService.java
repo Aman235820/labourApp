@@ -12,13 +12,11 @@ public interface LabourService {
 
        CompletableFuture<ResponseDTO> registerLabour(LabourDTO details);
 
-       CompletableFuture<ResponseDTO> findLabourByCategory(String category);
+       CompletableFuture<PaginationResponseDTO> findLabourByCategory(PaginationRequestDTO paginationRequestDTO , String category);
 
        CompletableFuture<PaginationResponseDTO> findAllLabours(PaginationRequestDTO paginationRequestDTO);
 
-
        CompletableFuture<ResponseDTO> rateLabour(Map<String, Object> reqBody);
-
 
        CompletableFuture<ResponseDTO> findLabour(Integer labourId);
 }
