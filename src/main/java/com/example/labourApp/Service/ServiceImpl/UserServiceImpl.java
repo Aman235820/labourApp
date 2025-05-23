@@ -37,6 +37,15 @@ public class UserServiceImpl implements UserService {
     @Async
     public CompletableFuture<ResponseDTO> createUser(UserDTO request) {
 
+
+        String email = request.getEmail();
+
+        boolean isAlreadyExists = userRepository.existsByEmail(email);
+
+        if(isAlreadyExists){
+             return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Already a registered emailID , try different !!"));
+        }
+
         User user = mapper.convertValue(request, User.class);
 
         userRepository.save(user);

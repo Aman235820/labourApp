@@ -5,6 +5,8 @@ import lombok.Data;
 @Data
 public class UserDTO {
 
+    private  Integer userId;
+
     private String fullName;
 
     private String email;
@@ -13,9 +15,21 @@ public class UserDTO {
 
     private String mobileNumber;
 
+
+
+    // Getter and Setter for userId
+    public Integer getUserId() {
+        return this.userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+
     // Getter and Setter for fullName
     public String getFullName() {
-        return fullName;
+        return this.fullName;
     }
 
     public void setFullName(String fullName) {
