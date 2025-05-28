@@ -35,20 +35,7 @@ public class LabourReqController {
 
     }
 
-    @PostMapping("/getAllLabours")
-    public Callable<ResponseEntity<PaginationResponseDTO>> getAllLabours(
-            @RequestBody PaginationRequestDTO paginationRequestDTO
-    ) {
-        return () -> {
-            try {
-                CompletableFuture<PaginationResponseDTO> response = labourService.findAllLabours(paginationRequestDTO);
-                return new ResponseEntity<>(response.get(), HttpStatus.OK);
 
-            } catch (Exception ce) {
-                return new ResponseEntity<>(new PaginationResponseDTO("Failed to get data", 0, 0, 0, 0, true), HttpStatus.BAD_REQUEST);
-            }
-        };
-    }
 
     @GetMapping("getLabourById/{labourId}")
     public Callable<ResponseEntity<ResponseDTO>> getLabourById(@PathVariable Integer labourId) {

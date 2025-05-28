@@ -6,6 +6,10 @@ import com.example.labourApp.Models.*;
 import com.example.labourApp.Repository.LabourRepository;
 import com.example.labourApp.Repository.UserRepository;
 import com.example.labourApp.Service.AdminService;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,13 +17,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
 public class AdminServiceImpl implements AdminService {
+
 
     @Autowired
     LabourRepository labourRepository;
@@ -32,25 +43,25 @@ public class AdminServiceImpl implements AdminService {
 
         boolean isAlreadyExists = labourRepository.existsById(labourId);
 
-        if(!isAlreadyExists){
+        if (!isAlreadyExists) {
             return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Labour not found in Database !!"));
         }
 
         labourRepository.deleteById(labourId);
-             return CompletableFuture.completedFuture(new ResponseDTO(null,false,"Successfully Deleted"));
+        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully Deleted"));
     }
 
     @Async
-    public CompletableFuture<ResponseDTO> removeUser(Integer userId){
+    public CompletableFuture<ResponseDTO> removeUser(Integer userId) {
 
         boolean isAlreadyExists = userRepository.existsById(userId);
 
-        if(!isAlreadyExists){
+        if (!isAlreadyExists) {
             return CompletableFuture.completedFuture(new ResponseDTO(null, false, "User not found in Database !!"));
         }
 
         userRepository.deleteById(userId);
-        return CompletableFuture.completedFuture(new ResponseDTO(null,false,"Successfully Deleted"));
+        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully Deleted"));
     }
 
 
@@ -77,6 +88,59 @@ public class AdminServiceImpl implements AdminService {
                 userPage.getTotalElements(), userPage.getTotalPages(), userPage.isLast()));
     }
 
+    public CompletableFuture<ResponseDTO> uploadFromExcelFile(MultipartFile myFile) {
+
+        // Create a thread pool with optimal size based on available processors
+        int processors = Runtime.getRuntime().availableProcessors();
+        ExecutorService executorService = Executors.newFixedThreadPool(processors);
+
+        // Create a thread-safe list to store labours
+        List<Labour> labours = Collections.synchronizedList(new ArrayList<>());
+
+        // Create a list to hold all futures
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        try (InputStream is = myFile.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0); // get first sheet
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue; // skip header row
+
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+
+                    Labour labour = new Labour();
+                    labour.setLabourName(row.getCell(0).getStringCellValue());
+                    labour.setLabourSkill(row.getCell(1).getStringCellValue());
+                    labour.setLabourMobileNo(String.format("%.0f", row.getCell(2).getNumericCellValue()));
+
+                    labours.add(labour);
+                }, executorService);
+                futures.add(future);
+            }
+
+            // Wait for all futures to complete
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            // Shutdown the executor service
+            executorService.shutdown();
+
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    labourRepository.saveAll(labours);
+                    return new ResponseDTO(null, false, "Successfully uploaded all labours from sheet !!");
+                } catch (Exception e) {
+                    return new ResponseDTO(null, true, "Error saving to database: " + e.getMessage());
+                }
+            });
+
+        } catch (Exception ce) {
+            ce.printStackTrace();
+            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "An Error occurred while uploading labours from sheet : " + ce.getMessage()));
+        }
+    }
+
 
     private UserDTO mapEntityToDto(User user) {
         UserDTO dto = new UserDTO();
@@ -87,8 +151,6 @@ public class AdminServiceImpl implements AdminService {
         dto.setMobileNumber(user.getMobileNumber());
         return dto;
     }
-
-
 
 
 }

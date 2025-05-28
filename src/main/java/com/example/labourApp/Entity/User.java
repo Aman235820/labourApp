@@ -17,6 +17,17 @@ public class User {
     private String password;
     private String mobileNumber;
 
+
+
+    // Getter and Setter for id
+    public Integer getUserId() {
+        return this.userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
     // Getter and Setter for fullName
     public String getFullName() {
         return fullName;

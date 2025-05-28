@@ -4,6 +4,7 @@ import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -19,4 +20,6 @@ public interface LabourService {
        CompletableFuture<ResponseDTO> rateLabour(Map<String, Object> reqBody);
 
        CompletableFuture<ResponseDTO> findLabour(Integer labourId);
+
+
 }
