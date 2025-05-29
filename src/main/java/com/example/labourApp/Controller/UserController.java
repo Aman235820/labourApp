@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("app/user")
+@RequestMapping("/user")
 public class UserController {
 
     @Autowired

@@ -14,7 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("/app")
+@RequestMapping("/labourReq")
 public class LabourReqController {
 
     @Autowired

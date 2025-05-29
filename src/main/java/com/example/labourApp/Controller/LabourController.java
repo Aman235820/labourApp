@@ -13,7 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("/app/Labour")
+@RequestMapping("/labour")
 public class LabourController {
 
 
