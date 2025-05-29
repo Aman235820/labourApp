@@ -119,6 +119,8 @@ public class LabourServiceImpl implements LabourService {
                         );
                     }
 
+
+
                     return calculateFinalRating(optionalLabour.get(), reqBody)
                             .thenCompose(updatedLabour ->
                                     CompletableFuture.supplyAsync(() -> {

@@ -1,9 +1,11 @@
 package com.example.labourApp.Controller;
 
+import com.example.labourApp.Models.BookingDTO;
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Models.UserDTO;
 import com.example.labourApp.Service.LabourService;
 import com.example.labourApp.Service.UserService;
+import org.aspectj.weaver.ast.Call;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -55,6 +60,36 @@ public class UserController {
             }
         };
     }
+
+
+    @PostMapping("/bookLabour")
+    public Callable<ResponseEntity<ResponseDTO>> bookLabour(
+            @RequestBody BookingDTO bookingDetails
+    ) {
+        return () -> {
+
+            try {
+
+                // Get current date and time
+                LocalDateTime now = LocalDateTime.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+                String formattedDateTime = now.format(formatter);
+
+                bookingDetails.setBookingTime(formattedDateTime);
+
+                CompletableFuture<ResponseDTO> res = userService.bookLabourService(bookingDetails);
+
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+
+            } catch (Exception ce) {
+                ce.printStackTrace();
+                return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
+
+
+    }
+
 
     @PostMapping("/rateLabour")
     public Callable<ResponseEntity<ResponseDTO>> rateLabour(
