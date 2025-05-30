@@ -23,6 +23,9 @@ public class Bookings {
 
     private String bookingTime;
 
+    private String userName;
+    private String labourName;
+
     // Getters
     public Integer getBookingId() {
         return bookingId;
@@ -52,6 +55,14 @@ public class Bookings {
         return bookingTime;
     }
 
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getLabourName() {
+        return labourName;
+    }
+
     // Setters
     public void setBookingId(Integer bookingId) {
         this.bookingId = bookingId;
@@ -79,5 +90,13 @@ public class Bookings {
 
     public void setBookingTime(String bookingTime) {
         this.bookingTime = bookingTime;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public void setLabourName(String labourName) {
+        this.labourName = labourName;
     }
 }

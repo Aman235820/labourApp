@@ -11,6 +11,8 @@ public class BookingDTO {
     private String labourSkill;
     private String userMobileNumber;
     private String bookingTime;
+    private String userName;
+    private String labourName;
 
     // Getters
     public Integer getUserId() {
@@ -37,6 +39,14 @@ public class BookingDTO {
         return bookingTime;
     }
 
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getLabourName() {
+        return labourName;
+    }
+
     // Setters
     public void setUserId(Integer userId) {
         this.userId = userId;
@@ -60,5 +70,13 @@ public class BookingDTO {
 
     public void setBookingTime(String bookingTime) {
         this.bookingTime = bookingTime;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public void setLabourName(String labourName) {
+        this.labourName = labourName;
     }
 }

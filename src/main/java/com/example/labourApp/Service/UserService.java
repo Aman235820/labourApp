@@ -15,4 +15,7 @@ public interface UserService {
     CompletableFuture<ResponseDTO> loginUser(UserDTO request);
 
     CompletableFuture<ResponseDTO> bookLabourService(BookingDTO bookingDetails);
+
+    CompletableFuture<ResponseDTO> viewMyBookings(Integer userId);
+
 }

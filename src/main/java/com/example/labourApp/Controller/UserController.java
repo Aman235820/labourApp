@@ -9,10 +9,7 @@ import org.aspectj.weaver.ast.Call;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -86,8 +83,6 @@ public class UserController {
                 return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
             }
         };
-
-
     }
 
 
@@ -107,6 +102,23 @@ public class UserController {
 
                 CompletableFuture<ResponseDTO> res = labourService.rateLabour(reqBody);
                 return new ResponseEntity<>(res.get(), HttpStatus.OK);
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+
+        };
+
+    }
+
+    @GetMapping("/viewMyBookings/{userId}")
+    public Callable<ResponseEntity<ResponseDTO>> viewMyBookings(@PathVariable Integer userId) {
+        return () -> {
+            try {
+
+                CompletableFuture<ResponseDTO> res = userService.viewMyBookings(userId);
+
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+
             } catch (Exception ce) {
                 return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
             }

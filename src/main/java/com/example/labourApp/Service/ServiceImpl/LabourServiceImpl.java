@@ -2,11 +2,16 @@ package com.example.labourApp.Service.ServiceImpl;
 
 import com.example.labourApp.Entity.Labour;
 import com.example.labourApp.Entity.Review;
+import com.example.labourApp.Entity.Bookings;
+import com.example.labourApp.Entity.User;
 import com.example.labourApp.Models.LabourDTO;
+import com.example.labourApp.Models.BookingDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
+import com.example.labourApp.Repository.BookingRepository;
 import com.example.labourApp.Repository.LabourRepository;
+import com.example.labourApp.Repository.UserRepository;
 import com.example.labourApp.Service.LabourService;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +24,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +46,12 @@ public class LabourServiceImpl implements LabourService {
 
     @Autowired
     private LabourRepository labourRepository;
+
+    @Autowired
+    BookingRepository bookingRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Async
     public CompletableFuture<ResponseDTO> registerLabour(LabourDTO details) {
@@ -107,6 +121,7 @@ public class LabourServiceImpl implements LabourService {
     public CompletableFuture<ResponseDTO> rateLabour(Map<String, Object> reqBody) {
         Integer userId = (Integer) reqBody.get("userId");
         Integer labourId = (Integer) reqBody.get("labourId");
+        Integer bookingId = (Integer) reqBody.get("bookingId");
         double rating = (Double) reqBody.get("labourRating");
         String review = (String) reqBody.get("review");
 
@@ -119,20 +134,22 @@ public class LabourServiceImpl implements LabourService {
                         );
                     }
 
-
-
-                    return calculateFinalRating(optionalLabour.get(), reqBody)
-                            .thenCompose(updatedLabour ->
-                                    CompletableFuture.supplyAsync(() -> {
-                                        try {
-                                            labourRepository.save(updatedLabour);
-                                            LabourDTO dto = mapEntityToDto(updatedLabour);
-                                            return new ResponseDTO(dto, false, "Rated Successfully");
-                                        } catch (Exception e) {
-                                            return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
-                                        }
-                                    }, executorService)
-                            );
+                    return bookingRepository.findByBookingIdAndUserIdAndLabourId(bookingId, userId, labourId)
+                            .map(booking -> calculateFinalRating(optionalLabour.get(), reqBody)
+                                    .thenCompose(updatedLabour ->
+                                        CompletableFuture.supplyAsync(() -> {
+                                            try {
+                                                labourRepository.save(updatedLabour);
+                                                LabourDTO dto = mapEntityToDto(updatedLabour);
+                                                return new ResponseDTO(dto, false, "Rated Successfully");
+                                            } catch (Exception e) {
+                                                return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
+                                            }
+                                        }, executorService)
+                                    ))
+                            .orElse(CompletableFuture.completedFuture(
+                                new ResponseDTO(null, true, "No booking found for the given details")
+                            ));
                 })
                 .exceptionally(throwable ->
                         new ResponseDTO(null, true, "Failed to process rating: " + throwable.getMessage())
@@ -191,15 +208,6 @@ public class LabourServiceImpl implements LabourService {
                 });
     }
 
-
-
-
-
-
-
-
-
-
     private LabourDTO mapEntityToDto(Labour labour) {
         LabourDTO dto = new LabourDTO();
         dto.setLabourId(labour.getLabourId());
@@ -211,7 +219,6 @@ public class LabourServiceImpl implements LabourService {
         dto.setReviews(labour.getReviews());
 
         return dto;
-
     }
 
     private Labour mapDtoToEntity(LabourDTO dto) {

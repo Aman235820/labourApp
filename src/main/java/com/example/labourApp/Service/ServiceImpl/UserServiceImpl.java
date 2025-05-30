@@ -19,16 +19,15 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     @Autowired
     ObjectMapper mapper;
@@ -80,9 +79,11 @@ public class UserServiceImpl implements UserService {
             return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Wrong password !!"));
         }
 
-        Map<String, String> result = new HashMap<>();
+        Map<String, Object> result = new HashMap<>();
         result.put("name", user.getFullName());
         result.put("email", user.getEmail());
+        result.put("userId", user.getUserId());
+        result.put("userMobileNumber", user.getMobileNumber());
 
         return CompletableFuture.completedFuture(new ResponseDTO(result, false, "success"));
     }
@@ -93,18 +94,56 @@ public class UserServiceImpl implements UserService {
         int userId = bookingDetails.getUserId();
         int labourId = bookingDetails.getLabourId();
 
-        if (userRepository.existsById(userId) && labourRepository.existsById(labourId)) {
-            Bookings book = mapBookingDTOToEntity(bookingDetails);
+        return CompletableFuture.supplyAsync(() -> {
+            Optional<User> userOptional = userRepository.findById(userId);
+            Optional<Labour> labourOptional = labourRepository.findById(labourId);
+
+            if (userOptional.isEmpty() || labourOptional.isEmpty()) {
+                return new ResponseDTO(null, true, "User or Labour not found !!");
+            }
+
+            User user = userOptional.get();
+            Labour labour = labourOptional.get();
+
+            // Create booking with details from User and Labour
+            Bookings book = new Bookings();
+            book.setUserId(userId);
+            book.setLabourId(labourId);
+            book.setUserName(user.getFullName());
+            book.setLabourName(labour.getLabourName());
+            book.setUserMobileNumber(user.getMobileNumber());
+            book.setLabourMobileNo(labour.getLabourMobileNo());
+            book.setLabourSkill(labour.getLabourSkill());
+            
+            book.setBookingTime(bookingDetails.getBookingTime());
+            
             Bookings bookedData = bookingRepository.save(book);
             
             HashMap<String, Object> resMap = new HashMap<>();
             resMap.put("bookingId", bookedData.getBookingId());
             resMap.put("bookingTime", bookedData.getBookingTime());
+            resMap.put("userName", bookedData.getUserName());
+            resMap.put("labourName", bookedData.getLabourName());
+            resMap.put("userMobileNumber", bookedData.getUserMobileNumber());
+            resMap.put("labourMobileNo", bookedData.getLabourMobileNo());
+            resMap.put("labourSkill", bookedData.getLabourSkill());
             
-            return CompletableFuture.completedFuture(new ResponseDTO(resMap, false, "Booking Successful !!"));
-        } else {
-            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Booking not possible !!"));
-        }
+            return new ResponseDTO(resMap, false, "Booking Successful !!");
+        }, executorService);
+    }
+
+
+    @Async
+    public CompletableFuture<ResponseDTO> viewMyBookings(Integer userId) {
+
+        Optional<List<Bookings>> booking = bookingRepository.findByUserId(userId);
+        return booking.map(bookings -> {
+            if (bookings.isEmpty()) {
+                return CompletableFuture.completedFuture(new ResponseDTO(null, false, "No Bookings Found !!"));
+            }
+            return CompletableFuture.completedFuture(new ResponseDTO(bookings, false, "Bookings Fetched Successfully !!"));
+        }).orElseGet(() -> CompletableFuture.completedFuture(new ResponseDTO(null, false, "No Bookings Found !!")));
+
     }
 
     /**
@@ -120,13 +159,8 @@ public class UserServiceImpl implements UserService {
         booking.setLabourMobileNo(bookingDTO.getLabourMobileNo());
         booking.setLabourSkill(bookingDTO.getLabourSkill());
         booking.setUserMobileNumber(bookingDTO.getUserMobileNumber());
-        
-        // Format current time as string
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedDateTime = now.format(formatter);
-        booking.setBookingTime(formattedDateTime);
-        
+        booking.setBookingTime(bookingDTO.getBookingTime());
+
         return booking;
     }
 
