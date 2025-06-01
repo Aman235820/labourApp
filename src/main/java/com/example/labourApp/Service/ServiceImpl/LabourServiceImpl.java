@@ -3,9 +3,7 @@ package com.example.labourApp.Service.ServiceImpl;
 import com.example.labourApp.Entity.Labour;
 import com.example.labourApp.Entity.Review;
 import com.example.labourApp.Entity.Bookings;
-import com.example.labourApp.Entity.User;
 import com.example.labourApp.Models.LabourDTO;
-import com.example.labourApp.Models.BookingDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
@@ -21,13 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -207,6 +200,29 @@ public class LabourServiceImpl implements LabourService {
                     return labour;
                 });
     }
+
+
+
+    public CompletableFuture<ResponseDTO> setBookingStatus(Integer labourId, Integer bookingId, Integer bookingStatusCode){
+
+
+           Optional<Bookings> myBooking = bookingRepository.findById(bookingId);
+
+           if(myBooking.isPresent()){
+                Bookings b = myBooking.get();
+                b.setBookingStatusCode(bookingStatusCode);
+                bookingRepository.save(b);
+               return CompletableFuture.completedFuture(new ResponseDTO(b, false, "Status updated Successfully !!"));
+           }
+
+        return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Unable to change status l̥!!"));
+
+
+
+    }
+
+
+
 
     private LabourDTO mapEntityToDto(Labour labour) {
         LabourDTO dto = new LabourDTO();

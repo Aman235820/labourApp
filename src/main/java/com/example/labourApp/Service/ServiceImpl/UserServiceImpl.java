@@ -113,10 +113,17 @@ public class UserServiceImpl implements UserService {
             book.setLabourName(labour.getLabourName());
             book.setUserMobileNumber(user.getMobileNumber());
             book.setLabourMobileNo(labour.getLabourMobileNo());
-            book.setLabourSkill(labour.getLabourSkill());
-            
             book.setBookingTime(bookingDetails.getBookingTime());
-            
+
+//            booking status code :
+//            0 : confirmation pending at labour's end
+//            1 : booking accepted
+//            2 : work done
+//            -1 : booking rejected at labour's end
+
+            book.setBookingStatusCode(0);
+
+
             Bookings bookedData = bookingRepository.save(book);
             
             HashMap<String, Object> resMap = new HashMap<>();
@@ -127,6 +134,7 @@ public class UserServiceImpl implements UserService {
             resMap.put("userMobileNumber", bookedData.getUserMobileNumber());
             resMap.put("labourMobileNo", bookedData.getLabourMobileNo());
             resMap.put("labourSkill", bookedData.getLabourSkill());
+            resMap.put("bookingStatusCode" , bookedData.getBookingStatusCode());
             
             return new ResponseDTO(resMap, false, "Booking Successful !!");
         }, executorService);

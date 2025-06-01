@@ -13,6 +13,18 @@ public class BookingDTO {
     private String bookingTime;
     private String userName;
     private String labourName;
+    private Integer bookingStatusCode;
+
+
+    public Integer getBookingStatusCode() {
+        return bookingStatusCode;
+    }
+
+    public void setBookingStatusCode(Integer bookingStatusCode) {
+        this.bookingStatusCode = bookingStatusCode;
+    }
+
+
 
     // Getters
     public Integer getUserId() {

@@ -4,7 +4,6 @@ import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -22,4 +21,5 @@ public interface LabourService {
        CompletableFuture<ResponseDTO> findLabour(Integer labourId);
 
 
+    CompletableFuture<ResponseDTO> setBookingStatus(Integer labourId, Integer bookingId, Integer bookingStatusCode);
 }
