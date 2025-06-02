@@ -115,7 +115,7 @@ public class LabourServiceImpl implements LabourService {
         Integer userId = (Integer) reqBody.get("userId");
         Integer labourId = (Integer) reqBody.get("labourId");
         Integer bookingId = (Integer) reqBody.get("bookingId");
-        double rating = (Double) reqBody.get("labourRating");
+        double rating = Double.parseDouble((reqBody.get("labourRating")).toString());
         String review = (String) reqBody.get("review");
 
         return CompletableFuture.supplyAsync(() ->
@@ -154,7 +154,7 @@ public class LabourServiceImpl implements LabourService {
         return CompletableFuture.supplyAsync(() -> {
                     Integer userId = (Integer) reqBody.get("userId");
                     Integer labourId = (Integer) reqBody.get("labourId");
-                    double rating = (Double) reqBody.get("labourRating");
+                    double rating = Double.parseDouble((reqBody.get("labourRating")).toString());
                     String review = (String) reqBody.get("review");
 
                     rating = Math.round(rating * 10) / 10.0;
@@ -180,7 +180,7 @@ public class LabourServiceImpl implements LabourService {
                 }, executorService)
                 .thenApply(params -> {
                     Integer userId = (Integer) reqBody.get("userId");
-                    double rating = (Double) reqBody.get("labourRating");
+                    double rating = Double.parseDouble((reqBody.get("labourRating")).toString());
                     String review = (String) reqBody.get("review");
 
                     double roundedstoredRating = (double) params[0];

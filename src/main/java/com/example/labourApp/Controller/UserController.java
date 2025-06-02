@@ -94,9 +94,9 @@ public class UserController {
 
             try {
 
-                double ratingNumber = (double) reqBody.get("labourRating");
+                double ratingNumber = Double.parseDouble((reqBody.get("labourRating")).toString());
 
-                if (ratingNumber < 0 || ratingNumber > 5) {
+                if (ratingNumber < 0.0 || ratingNumber > 5.0) {
                     throw new Exception("Rate between 0 to 5 only !!");
                 }
 
