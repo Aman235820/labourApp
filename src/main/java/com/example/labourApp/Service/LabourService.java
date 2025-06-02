@@ -22,4 +22,8 @@ public interface LabourService {
 
 
     CompletableFuture<ResponseDTO> setBookingStatus(Integer labourId, Integer bookingId, Integer bookingStatusCode);
+
+       CompletableFuture<ResponseDTO> showRequestedServices(Integer labourId);
+
+    CompletableFuture<ResponseDTO> labourLogin(String mobileNumber);
 }

@@ -48,10 +48,30 @@ public class LabourServiceImpl implements LabourService {
 
     @Async
     public CompletableFuture<ResponseDTO> registerLabour(LabourDTO details) {
+
+        String mobileNo = details.getLabourMobileNo();
+
+        boolean isExists = labourRepository.existsByLabourMobileNo(mobileNo);
+
+        if(isExists){
+            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Mobile Number already registered, try different !!"));
+        }
+
         Labour labour = mapDtoToEntity(details);
         labourRepository.save(labour);
         return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully Registered !!"));
     }
+
+    @Async
+    public  CompletableFuture<ResponseDTO> labourLogin(String mobileNumber){
+        Optional<Labour> l = labourRepository.findByLabourMobileNo(mobileNumber);
+        if(l.isPresent()){
+           return CompletableFuture.completedFuture(new ResponseDTO(l.get(), false, "Successfully Fetched labour !!"));
+        }
+
+        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Didn't find any labour with this mobile number !!"));
+    }
+
 
 
     @Async
@@ -220,6 +240,24 @@ public class LabourServiceImpl implements LabourService {
 
 
     }
+
+
+
+
+    @Async
+    public  CompletableFuture<ResponseDTO> showRequestedServices(Integer labourId){
+
+             Optional<List<Bookings>> requests = bookingRepository.findByLabourId(labourId);
+
+             if(requests.isPresent()){
+                    return CompletableFuture.completedFuture(new ResponseDTO(requests.get(),false,"Requests fetched successfully !!"));
+             }
+
+        return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Unable to fetch requests!!"));
+
+
+    }
+
 
 
 

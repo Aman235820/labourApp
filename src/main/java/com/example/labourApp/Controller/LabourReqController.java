@@ -51,24 +51,7 @@ public class LabourReqController {
     }
 
 
-    @GetMapping("/setBookingStatus")
-    public Callable<ResponseEntity<ResponseDTO>> setBookingStatus(
 
-            @RequestParam Integer labourId,
-            @RequestParam Integer bookingId,
-            @RequestParam Integer bookingStatusCode
-
-    ){
-        return () -> {
-            try {
-                CompletableFuture<ResponseDTO> response = labourService.setBookingStatus(labourId , bookingId , bookingStatusCode);
-                return new ResponseEntity<>(response.get(), HttpStatus.OK);
-
-            } catch (Exception ce) {
-                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to change status"), HttpStatus.BAD_REQUEST);
-            }
-        };
-    }
 
 
 }
