@@ -116,10 +116,10 @@ public class UserServiceImpl implements UserService {
             book.setBookingTime(bookingDetails.getBookingTime());
 
 //            booking status code :
-//            0 : confirmation pending at labour's end
-//            1 : booking accepted
-//            2 : work done
-//            -1 : booking rejected at labour's end
+//            0 : Confirmation pending at labour's end
+//            1 : Booking accepted
+//            2 : Work done
+//            -1 : Booking rejected by labour
 
             book.setBookingStatusCode(0);
 

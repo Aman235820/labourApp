@@ -37,7 +37,7 @@ public class LabourReqController {
 
 
 
-    @GetMapping("getLabourById/{labourId}")
+    @GetMapping("/getLabourById/{labourId}")
     public Callable<ResponseEntity<ResponseDTO>> getLabourById(@PathVariable Integer labourId) {
         return () -> {
             try {
@@ -51,12 +51,12 @@ public class LabourReqController {
     }
 
 
-    @GetMapping("setBookingStatus")
+    @GetMapping("/setBookingStatus")
     public Callable<ResponseEntity<ResponseDTO>> setBookingStatus(
 
-            @PathVariable Integer labourId,
-            @PathVariable Integer bookingId,
-            @PathVariable Integer bookingStatusCode
+            @RequestParam Integer labourId,
+            @RequestParam Integer bookingId,
+            @RequestParam Integer bookingStatusCode
 
     ){
         return () -> {
