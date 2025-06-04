@@ -3,6 +3,7 @@ package com.example.labourApp.Service.ServiceImpl;
 import com.example.labourApp.Entity.Labour;
 import com.example.labourApp.Entity.Review;
 import com.example.labourApp.Entity.Bookings;
+import com.example.labourApp.Entity.User;
 import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.PaginationResponseDTO;
@@ -21,9 +22,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,25 +52,24 @@ public class LabourServiceImpl implements LabourService {
 
         boolean isExists = labourRepository.existsByLabourMobileNo(mobileNo);
 
-        if(isExists){
+        if (isExists) {
             return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Mobile Number already registered, try different !!"));
         }
 
         Labour labour = mapDtoToEntity(details);
         labourRepository.save(labour);
-        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully Registered !!"));
+        return CompletableFuture.completedFuture(new ResponseDTO(labour, false, "Successfully Registered !!"));
     }
 
     @Async
-    public  CompletableFuture<ResponseDTO> labourLogin(String mobileNumber){
+    public CompletableFuture<ResponseDTO> labourLogin(String mobileNumber) {
         Optional<Labour> l = labourRepository.findByLabourMobileNo(mobileNumber);
-        if(l.isPresent()){
-           return CompletableFuture.completedFuture(new ResponseDTO(l.get(), false, "Successfully Fetched labour !!"));
+        if (l.isPresent()) {
+            return CompletableFuture.completedFuture(new ResponseDTO(l.get(), false, "Successfully Fetched labour !!"));
         }
 
         return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Didn't find any labour with this mobile number !!"));
     }
-
 
 
     @Async
@@ -150,18 +148,18 @@ public class LabourServiceImpl implements LabourService {
                     return bookingRepository.findByBookingIdAndUserIdAndLabourId(bookingId, userId, labourId)
                             .map(booking -> calculateFinalRating(optionalLabour.get(), reqBody)
                                     .thenCompose(updatedLabour ->
-                                        CompletableFuture.supplyAsync(() -> {
-                                            try {
-                                                labourRepository.save(updatedLabour);
-                                                LabourDTO dto = mapEntityToDto(updatedLabour);
-                                                return new ResponseDTO(dto, false, "Rated Successfully");
-                                            } catch (Exception e) {
-                                                return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
-                                            }
-                                        }, executorService)
+                                            CompletableFuture.supplyAsync(() -> {
+                                                try {
+                                                    labourRepository.save(updatedLabour);
+                                                    LabourDTO dto = mapEntityToDto(updatedLabour);
+                                                    return new ResponseDTO(dto, false, "Rated Successfully");
+                                                } catch (Exception e) {
+                                                    return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
+                                                }
+                                            }, executorService)
                                     ))
                             .orElse(CompletableFuture.completedFuture(
-                                new ResponseDTO(null, true, "No booking found for the given details")
+                                    new ResponseDTO(null, true, "No booking found for the given details")
                             ));
                 })
                 .exceptionally(throwable ->
@@ -222,44 +220,74 @@ public class LabourServiceImpl implements LabourService {
     }
 
 
+    public CompletableFuture<ResponseDTO> setBookingStatus(Integer labourId, Integer bookingId, Integer bookingStatusCode) {
 
-    public CompletableFuture<ResponseDTO> setBookingStatus(Integer labourId, Integer bookingId, Integer bookingStatusCode){
 
+        Optional<Bookings> myBooking = bookingRepository.findById(bookingId);
 
-           Optional<Bookings> myBooking = bookingRepository.findById(bookingId);
-
-           if(myBooking.isPresent()){
-                Bookings b = myBooking.get();
-                b.setBookingStatusCode(bookingStatusCode);
-                bookingRepository.save(b);
-               return CompletableFuture.completedFuture(new ResponseDTO(b, false, "Status updated Successfully !!"));
-           }
+        if (myBooking.isPresent()) {
+            Bookings b = myBooking.get();
+            b.setBookingStatusCode(bookingStatusCode);
+            bookingRepository.save(b);
+            return CompletableFuture.completedFuture(new ResponseDTO(b, false, "Status updated Successfully !!"));
+        }
 
         return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Unable to change status l̥!!"));
-
 
 
     }
 
 
+    @Async
+    public CompletableFuture<ResponseDTO> showMyReviews(Integer labourId, String sortBy, String sortOrder) {
+
+        Optional<Labour> optionalLabour = labourRepository.findById(labourId);
+
+        if (optionalLabour.isPresent()) {
+            Labour l = optionalLabour.get();
+            List<Review> myReviews = l.getReviews();
+
+            List<Review> sortedList = new ArrayList<>();
+
+            if (!myReviews.isEmpty()) {
+                if (sortOrder.equalsIgnoreCase("desc")) {
+                    if (sortBy.equalsIgnoreCase("rating")) {
+                        sortedList = myReviews.stream().sorted(Comparator.comparingDouble(Review::getRating).reversed()).toList();
+                    } else {
+                        sortedList = myReviews.stream().sorted(Comparator.comparing(Review::getReviewTime, Comparator.nullsLast(Comparator.naturalOrder())).reversed()).toList();
+                    }
+
+                } else {
+                    if (sortBy.equalsIgnoreCase("rating")) {
+                        sortedList = myReviews.stream().sorted(Comparator.comparingDouble(Review::getRating)).toList();
+                    } else {
+                        sortedList = myReviews.stream().sorted(Comparator.comparing(Review::getReviewTime, Comparator.nullsLast(Comparator.naturalOrder()))).toList();
+                    }
+                }
+
+                return CompletableFuture.completedFuture(new ResponseDTO(sortedList, false, "Successfully fetched reviews !!"));
+            }
+
+            return CompletableFuture.completedFuture(new ResponseDTO(sortedList, false, "No reviews available !!"));
+        }
+
+        return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Unable to fetch at the moment !!"));
+    }
 
 
     @Async
-    public  CompletableFuture<ResponseDTO> showRequestedServices(Integer labourId){
+    public CompletableFuture<ResponseDTO> showRequestedServices(Integer labourId) {
 
-             Optional<List<Bookings>> requests = bookingRepository.findByLabourId(labourId);
+        Optional<List<Bookings>> requests = bookingRepository.findByLabourId(labourId);
 
-             if(requests.isPresent()){
-                    return CompletableFuture.completedFuture(new ResponseDTO(requests.get(),false,"Requests fetched successfully !!"));
-             }
+        if (requests.isPresent()) {
+            return CompletableFuture.completedFuture(new ResponseDTO(requests.get(), false, "Requests fetched successfully !!"));
+        }
 
         return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Unable to fetch requests!!"));
 
 
     }
-
-
-
 
 
     private LabourDTO mapEntityToDto(Labour labour) {

@@ -21,4 +21,5 @@ public interface LabourRepository extends JpaRepository<Labour, Integer> {
 
     @Query("SELECT l FROM Labour l WHERE l.labourMobileNo = :mobileNumber")
     Optional<Labour> findByLabourMobileNo(String mobileNumber);
+
 }
