@@ -40,6 +40,22 @@ public class AdminController {
         };
     }
 
+    @PostMapping("/getAllBookings")
+    public Callable<ResponseEntity<PaginationResponseDTO>> getAllBookings(
+            @RequestBody PaginationRequestDTO paginationRequestDTO
+    ){
+          return()->{
+              try{
+                    CompletableFuture<PaginationResponseDTO> res = adminService.getAllBookings(paginationRequestDTO);
+
+                    return new ResponseEntity<>(res.get() , HttpStatus.OK);
+
+              }catch(Exception ce){
+                  return new ResponseEntity<>(new PaginationResponseDTO("Failed to get data", 0, 0, 0, 0, true), HttpStatus.BAD_REQUEST);
+              }
+          };
+    }
+
 
     @DeleteMapping("/removeLabour/{labourId}")
     public Callable<ResponseEntity<ResponseDTO>> removeLabour(@PathVariable Integer labourId) {

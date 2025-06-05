@@ -16,4 +16,6 @@ public interface AdminService {
     CompletableFuture<PaginationResponseDTO> findAllUsers(PaginationRequestDTO paginationRequestDTO);
 
     CompletableFuture<ResponseDTO> uploadFromExcelFile(MultipartFile myFile);
+
+    CompletableFuture<PaginationResponseDTO> getAllBookings(PaginationRequestDTO paginationRequestDTO);
 }

@@ -1,8 +1,10 @@
 package com.example.labourApp.Service.ServiceImpl;
 
+import com.example.labourApp.Entity.Bookings;
 import com.example.labourApp.Entity.Labour;
 import com.example.labourApp.Entity.User;
 import com.example.labourApp.Models.*;
+import com.example.labourApp.Repository.BookingRepository;
 import com.example.labourApp.Repository.LabourRepository;
 import com.example.labourApp.Repository.UserRepository;
 import com.example.labourApp.Service.AdminService;
@@ -37,6 +39,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    BookingRepository bookingRepository;
 
     @Async
     public CompletableFuture<ResponseDTO> removeLabour(Integer labourId) {
@@ -140,6 +145,26 @@ public class AdminServiceImpl implements AdminService {
             return CompletableFuture.completedFuture(new ResponseDTO(null, true, "An Error occurred while uploading labours from sheet : " + ce.getMessage()));
         }
     }
+
+    @Async
+    public CompletableFuture<PaginationResponseDTO> getAllBookings(PaginationRequestDTO paginationRequestDTO){
+        Integer pageNumber = paginationRequestDTO.getPageNumber();
+        Integer pageSize = paginationRequestDTO.getPageSize();
+        String sortBy = paginationRequestDTO.getSortBy();
+        String sortOrder = paginationRequestDTO.getSortOrder();
+
+        Sort sort = sortOrder.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+
+        Pageable p = PageRequest.of(pageNumber, pageSize, sort);
+
+        Page<Bookings> bookingPage = this.bookingRepository.findAll(p);
+
+        List<Bookings> bookingList = bookingPage.getContent();
+        return CompletableFuture.completedFuture(new PaginationResponseDTO(bookingList, bookingPage.getNumber(), bookingPage.getSize(),
+                bookingPage.getTotalElements(), bookingPage.getTotalPages(), bookingPage.isLast()));
+
+    }
+
 
 
     private UserDTO mapEntityToDto(User user) {
