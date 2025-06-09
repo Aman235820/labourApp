@@ -1,5 +1,6 @@
 package com.example.labourApp.Service.ServiceImpl;
 
+import com.example.labourApp.CustomExceptions.ResourceNotFoundException;
 import com.example.labourApp.Entity.Bookings;
 import com.example.labourApp.Entity.Labour;
 import com.example.labourApp.Entity.User;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -147,7 +150,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Async
-    public CompletableFuture<PaginationResponseDTO> getAllBookings(PaginationRequestDTO paginationRequestDTO){
+    public CompletableFuture<PaginationResponseDTO> getAllBookings(PaginationRequestDTO paginationRequestDTO) {
         Integer pageNumber = paginationRequestDTO.getPageNumber();
         Integer pageSize = paginationRequestDTO.getPageSize();
         String sortBy = paginationRequestDTO.getSortBy();
@@ -165,6 +168,15 @@ public class AdminServiceImpl implements AdminService {
 
     }
 
+    @Async
+    public CompletableFuture<ResponseEntity<ResponseDTO>> deleteBooking(Integer bookingId) {
+
+          if(bookingRepository.existsById(bookingId)){
+                bookingRepository.deleteById(bookingId);
+                return CompletableFuture.completedFuture(new ResponseEntity<>(new ResponseDTO(null,false,"Deleted Successfully !!"), HttpStatus.OK));
+          }
+          throw new ResourceNotFoundException("Booking","bookingID" , bookingId);
+    }
 
 
     private UserDTO mapEntityToDto(User user) {

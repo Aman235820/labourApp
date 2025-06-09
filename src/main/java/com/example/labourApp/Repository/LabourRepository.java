@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface LabourRepository extends JpaRepository<Labour, Integer> {
 
-    @Query("SELECT l FROM Labour l WHERE LOWER(l.labourSkill) LIKE LOWER(CONCAT('%', :category, '%'))")
+    @Query("SELECT l FROM Labour l WHERE SOUNDEX(LOWER(l.labourSkill)) = SOUNDEX(LOWER(CONCAT('%', :category, '%')))")
     Page<Labour> findByLabourSkill(@Param("category") String category , Pageable p);
 
     boolean existsByLabourMobileNo(String mobileNo);

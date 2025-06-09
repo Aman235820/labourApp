@@ -43,17 +43,17 @@ public class AdminController {
     @PostMapping("/getAllBookings")
     public Callable<ResponseEntity<PaginationResponseDTO>> getAllBookings(
             @RequestBody PaginationRequestDTO paginationRequestDTO
-    ){
-          return()->{
-              try{
-                    CompletableFuture<PaginationResponseDTO> res = adminService.getAllBookings(paginationRequestDTO);
+    ) {
+        return () -> {
+            try {
+                CompletableFuture<PaginationResponseDTO> res = adminService.getAllBookings(paginationRequestDTO);
 
-                    return new ResponseEntity<>(res.get() , HttpStatus.OK);
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
 
-              }catch(Exception ce){
-                  return new ResponseEntity<>(new PaginationResponseDTO("Failed to get data", 0, 0, 0, 0, true), HttpStatus.BAD_REQUEST);
-              }
-          };
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new PaginationResponseDTO("Failed to get data", 0, 0, 0, 0, true), HttpStatus.BAD_REQUEST);
+            }
+        };
     }
 
 
@@ -102,16 +102,25 @@ public class AdminController {
     @PostMapping("/uploadLabours")
     public Callable<ResponseEntity<ResponseDTO>> uploadLabours(
             @RequestParam("file") MultipartFile myFile
-            ){
-        return ()->{
-            try{
-                 CompletableFuture<ResponseDTO> res = adminService.uploadFromExcelFile(myFile);
+    ) {
+        return () -> {
+            try {
+                CompletableFuture<ResponseDTO> res = adminService.uploadFromExcelFile(myFile);
 
-                 return new ResponseEntity<>(res.get() , HttpStatus.OK);
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
 
-            }catch(Exception ce){
+            } catch (Exception ce) {
                 return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
             }
+        };
+    }
+
+    @DeleteMapping("/deleteBooking/{bookingId}")
+    public Callable<ResponseEntity<ResponseDTO>> deleteBooking(@PathVariable Integer bookingId) {
+
+        return () -> {
+            CompletableFuture<ResponseEntity<ResponseDTO>> res = adminService.deleteBooking(bookingId);  // This can throw ResourceNotFoundException
+            return res.get();
         };
     }
 

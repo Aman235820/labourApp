@@ -25,7 +25,15 @@ public class LabourReqController {
                                                                           @RequestBody PaginationRequestDTO paginationRequestDTO) {
         return () -> {
             try {
-                CompletableFuture<PaginationResponseDTO> response = labourService.findLabourByCategory(paginationRequestDTO, category);
+
+                CompletableFuture<PaginationResponseDTO> response = null;
+
+                if(category == null || category.trim().isEmpty()){
+                    response = labourService.findAllLabours(paginationRequestDTO);
+                }
+                else{
+                   response = labourService.findLabourByCategory(paginationRequestDTO, category);
+                }
                 return new ResponseEntity<>(response.get(), HttpStatus.OK);
 
             } catch (Exception ce) {
