@@ -21,4 +21,6 @@ public interface AdminService {
     CompletableFuture<PaginationResponseDTO> getAllBookings(PaginationRequestDTO paginationRequestDTO);
 
     CompletableFuture<ResponseEntity<ResponseDTO>> deleteBooking(Integer bookingId);
+
+    CompletableFuture<ResponseDTO> getAppStats();
 }

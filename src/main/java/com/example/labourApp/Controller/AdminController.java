@@ -124,6 +124,21 @@ public class AdminController {
         };
     }
 
+    @GetMapping("/getAppStats")
+    public Callable<ResponseEntity<ResponseDTO>> getAppStats(){
+        return () -> {
+            try {
+                CompletableFuture<ResponseDTO> res = adminService.getAppStats();
+
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
+    }
+
+
 
 
 

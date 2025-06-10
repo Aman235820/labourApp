@@ -25,9 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +34,7 @@ import java.util.stream.Collectors;
 @Service
 public class AdminServiceImpl implements AdminService {
 
+    ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     @Autowired
     LabourRepository labourRepository;
@@ -171,11 +170,29 @@ public class AdminServiceImpl implements AdminService {
     @Async
     public CompletableFuture<ResponseEntity<ResponseDTO>> deleteBooking(Integer bookingId) {
 
-          if(bookingRepository.existsById(bookingId)){
-                bookingRepository.deleteById(bookingId);
-                return CompletableFuture.completedFuture(new ResponseEntity<>(new ResponseDTO(null,false,"Deleted Successfully !!"), HttpStatus.OK));
-          }
-          throw new ResourceNotFoundException("Booking","bookingID" , bookingId);
+        if (bookingRepository.existsById(bookingId)) {
+            bookingRepository.deleteById(bookingId);
+            return CompletableFuture.completedFuture(new ResponseEntity<>(new ResponseDTO(null, false, "Deleted Successfully !!"), HttpStatus.OK));
+        }
+        throw new ResourceNotFoundException("Booking", "bookingID", bookingId);
+    }
+
+
+    @Async
+    public CompletableFuture<ResponseDTO> getAppStats() {
+
+        Object result = bookingRepository.getBookingStatusStats();
+
+        Object[] row = (Object[]) result;
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("Rejected", row[0]);
+        stats.put("Pending", row[1]);
+        stats.put("Accepted", row[2]);
+        stats.put("Completed", row[3]);
+
+        return CompletableFuture.completedFuture(new ResponseDTO(stats, false, "Successfully fetched"));
+
     }
 
 
