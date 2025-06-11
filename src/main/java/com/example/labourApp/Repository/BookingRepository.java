@@ -27,4 +27,15 @@ public interface BookingRepository extends JpaRepository<Bookings , Integer> {
                 SUM(CASE WHEN booking_status_code = 3 THEN 1 ELSE 0 END) AS Completed
             FROM defaultdb.bookings;""" , nativeQuery = true)
     Object getBookingStatusStats();
+
+    @Query(value= """
+            SELECT
+                SUM(CASE WHEN ceil(rating) = 5 THEN 1 ELSE 0 END) AS rating_5,
+                SUM(CASE WHEN ceil(rating) = 4 THEN 1 ELSE 0 END) AS rating_4,
+                SUM(CASE WHEN ceil(rating) = 3 THEN 1 ELSE 0 END) AS rating_3,
+                SUM(CASE WHEN ceil(rating) = 2 THEN 1 ELSE 0 END) AS rating_2,
+                SUM(CASE WHEN ceil(rating) = 1 THEN 1 ELSE 0 END) AS rating_1
+            FROM defaultdb.labour
+            WHERE rating BETWEEN 1 AND 5;""", nativeQuery = true)
+    Object getLabourRatingStats();
 }

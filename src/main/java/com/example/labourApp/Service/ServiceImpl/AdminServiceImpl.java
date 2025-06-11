@@ -181,17 +181,49 @@ public class AdminServiceImpl implements AdminService {
     @Async
     public CompletableFuture<ResponseDTO> getAppStats() {
 
-        Object result = bookingRepository.getBookingStatusStats();
+        CompletableFuture<Map<String, Object>> bookingStatusStatsFuture = CompletableFuture.supplyAsync(() -> {
+            Object result = bookingRepository.getBookingStatusStats();
+            Object[] row = (Object[]) result;
 
-        Object[] row = (Object[]) result;
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("Rejected", row[0]);
+            stats.put("Pending", row[1]);
+            stats.put("Accepted", row[2]);
+            stats.put("Completed", row[3]);
 
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("Rejected", row[0]);
-        stats.put("Pending", row[1]);
-        stats.put("Accepted", row[2]);
-        stats.put("Completed", row[3]);
+            return stats;
 
-        return CompletableFuture.completedFuture(new ResponseDTO(stats, false, "Successfully fetched"));
+        }, executorService);
+
+        CompletableFuture<Map<String, Object>> labourRatingStatsFuture = CompletableFuture.supplyAsync(() -> {
+            Object result = bookingRepository.getLabourRatingStats();
+            Object[] row = (Object[]) result;
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("rating_5", row[0]);
+            stats.put("rating_4", row[1]);
+            stats.put("rating_3", row[2]);
+            stats.put("rating_2", row[3]);
+            stats.put("rating_1", row[4]);
+
+            return stats;
+
+        }, executorService);
+
+        return CompletableFuture.allOf(bookingStatusStatsFuture, labourRatingStatsFuture)
+                .thenApply(__ -> {
+
+                    Object bookingStatusStats = bookingStatusStatsFuture.join();
+                    Object labourRatingStats = labourRatingStatsFuture.join();
+
+                    HashMap<String, Object> finalStats = new HashMap<>();
+
+                    finalStats.put("bookingStatusStats", bookingStatusStats);
+                    finalStats.put("labourRatingStats", labourRatingStats);
+
+                    return new ResponseDTO(finalStats, false, "Successfully Fetched !!");
+
+                });
+
 
     }
 
