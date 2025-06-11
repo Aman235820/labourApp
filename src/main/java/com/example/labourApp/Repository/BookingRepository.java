@@ -38,4 +38,7 @@ public interface BookingRepository extends JpaRepository<Bookings , Integer> {
             FROM defaultdb.labour
             WHERE rating BETWEEN 1 AND 5;""", nativeQuery = true)
     Object getLabourRatingStats();
+
+    @Query(value="select labour_skill , count(*) from defaultdb.labour group by labour_skill" , nativeQuery = true)
+    List<Object[]> getSkillsStats();
 }

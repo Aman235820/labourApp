@@ -209,16 +209,33 @@ public class AdminServiceImpl implements AdminService {
 
         }, executorService);
 
-        return CompletableFuture.allOf(bookingStatusStatsFuture, labourRatingStatsFuture)
+
+        CompletableFuture<Object> skillsStatsFuture = CompletableFuture.supplyAsync(() -> {
+            List<Object[]> result = bookingRepository.getSkillsStats();
+
+            HashMap<Object, Object> map = new HashMap<>();
+
+            for (Object[] x : result) {
+                map.put(x[0], x[1]);
+            }
+
+            return map;
+
+        }, executorService);
+
+
+        return CompletableFuture.allOf(bookingStatusStatsFuture, labourRatingStatsFuture, skillsStatsFuture)
                 .thenApply(__ -> {
 
                     Object bookingStatusStats = bookingStatusStatsFuture.join();
                     Object labourRatingStats = labourRatingStatsFuture.join();
+                    Object skillsStats = skillsStatsFuture.join();
 
                     HashMap<String, Object> finalStats = new HashMap<>();
 
                     finalStats.put("bookingStatusStats", bookingStatusStats);
                     finalStats.put("labourRatingStats", labourRatingStats);
+                    finalStats.put("availableSkillStats", skillsStats);
 
                     return new ResponseDTO(finalStats, false, "Successfully Fetched !!");
 
