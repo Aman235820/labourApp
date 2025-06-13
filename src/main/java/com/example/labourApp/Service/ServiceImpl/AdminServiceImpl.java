@@ -9,11 +9,10 @@ import com.example.labourApp.Repository.BookingRepository;
 import com.example.labourApp.Repository.LabourRepository;
 import com.example.labourApp.Repository.UserRepository;
 import com.example.labourApp.Service.AdminService;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -95,6 +95,8 @@ public class AdminServiceImpl implements AdminService {
                 userPage.getTotalElements(), userPage.getTotalPages(), userPage.isLast()));
     }
 
+    @Async
+    @Transactional
     public CompletableFuture<ResponseDTO> uploadFromExcelFile(MultipartFile myFile) {
 
         // Create a thread pool with optimal size based on available processors
@@ -115,12 +117,14 @@ public class AdminServiceImpl implements AdminService {
             for (Row row : sheet) {
                 if (row.getRowNum() == 0) continue; // skip header row
 
+                if (isRowEmpty(row)) break;
+
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
 
                     Labour labour = new Labour();
                     labour.setLabourName(row.getCell(0).getStringCellValue());
                     labour.setLabourSkill(row.getCell(1).getStringCellValue());
-                    labour.setLabourMobileNo(String.format("%.0f", row.getCell(2).getNumericCellValue()));
+                    labour.setLabourMobileNo(row.getCell(2).getStringCellValue());
 
                     labours.add(labour);
                 }, executorService);
@@ -130,17 +134,20 @@ public class AdminServiceImpl implements AdminService {
             // Wait for all futures to complete
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-            // Shutdown the executor service
-            executorService.shutdown();
 
             return CompletableFuture.supplyAsync(() -> {
                 try {
+
                     labourRepository.saveAll(labours);
+                    labourRepository.flush(); // Important to trigger constraint violations
                     return new ResponseDTO(null, false, "Successfully uploaded all labours from sheet !!");
+                } catch (DataIntegrityViolationException ce) {
+                    throw new DataIntegrityViolationException("Duplicate mobile number found in the Excel sheet.");
                 } catch (Exception e) {
                     return new ResponseDTO(null, true, "Error saving to database: " + e.getMessage());
                 }
             });
+
 
         } catch (Exception ce) {
             ce.printStackTrace();
@@ -242,6 +249,16 @@ public class AdminServiceImpl implements AdminService {
                 });
 
 
+    }
+
+    private boolean isRowEmpty(Row row) {
+        for (int i = 0; i <= 2; i++) { // check first 3 cells: name, skill, mobile
+            Cell cell = row.getCell(i);
+            if (cell != null && cell.getCellType() != CellType.BLANK && !cell.toString().trim().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
 

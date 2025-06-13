@@ -19,6 +19,7 @@ public class Labour {
 
     private String labourSkill;
 
+    @Column(unique = true, nullable = false)
     private String labourMobileNo;
 
     private String rating;
