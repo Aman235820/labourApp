@@ -89,6 +89,13 @@ public class LabourServiceImpl implements LabourService {
 
         List<Labour> labourList = labourListPage.getContent();
 
+        if (labourList.isEmpty()) {
+
+            labourListPage = labourRepository.findByLabourSubSkill(category, p);
+            labourList = labourListPage.getContent();
+        }
+
+
         List<LabourDTO> dtoList = labourList.stream()
                 .map(this::mapEntityToDto)
                 .collect(Collectors.toList());
@@ -311,7 +318,7 @@ public class LabourServiceImpl implements LabourService {
         labour.setRating(dto.getRating());
         labour.setRatingCount(dto.getRatingCount());
         labour.setReviews(dto.getReviews());
-        
+
         // Handle sub-skills with proper bidirectional relationship
         if (dto.getLabourSubSkills() != null && !dto.getLabourSubSkills().isEmpty()) {
             List<LabourSubSkill> subSkills = new ArrayList<>();
@@ -321,7 +328,7 @@ public class LabourServiceImpl implements LabourService {
             }
             labour.setLabourSubSkills(subSkills);
         }
-        
+
         return labour;
     }
 }

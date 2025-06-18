@@ -25,4 +25,6 @@ public interface LabourRepository extends JpaRepository<Labour, Integer> {
     @org.springframework.data.jpa.repository.Query(value = "SET FOREIGN_KEY_CHECKS = 0; TRUNCATE TABLE Labour; SET FOREIGN_KEY_CHECKS = 1;", nativeQuery = true)
     void truncateLabourTable();
 
+    @Query(value = "SELECT l.* FROM defaultdb.labour AS l JOIN defaultdb.labour_sub_skill AS s ON l.labour_id = s.labour_id WHERE SOUNDEX(s.sub_skill_name) = SOUNDEX(:category) OR LOWER(s.sub_skill_name) LIKE LOWER(CONCAT('%', :category, '%'))" , nativeQuery = true)
+    Page<Labour> findByLabourSubSkill(String category, Pageable p);
 }
