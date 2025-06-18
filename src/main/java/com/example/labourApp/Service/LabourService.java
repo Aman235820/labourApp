@@ -20,7 +20,6 @@ public interface LabourService {
 
     CompletableFuture<ResponseDTO> findLabour(Integer labourId);
 
-
     CompletableFuture<ResponseDTO> setBookingStatus(Integer labourId, Integer bookingId, Integer bookingStatusCode);
 
     CompletableFuture<ResponseDTO> showRequestedServices(Integer labourId);

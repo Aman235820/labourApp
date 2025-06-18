@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,5 +20,9 @@ public interface LabourRepository extends JpaRepository<Labour, Integer> {
 
     @Query("SELECT l FROM Labour l WHERE l.labourMobileNo = :mobileNumber")
     Optional<Labour> findByLabourMobileNo(String mobileNumber);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query(value = "SET FOREIGN_KEY_CHECKS = 0; TRUNCATE TABLE Labour; SET FOREIGN_KEY_CHECKS = 1;", nativeQuery = true)
+    void truncateLabourTable();
 
 }

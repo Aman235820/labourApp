@@ -1,5 +1,6 @@
 package com.example.labourApp.Models;
 
+import com.example.labourApp.Entity.LabourSubSkill;
 import com.example.labourApp.Entity.Review;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
@@ -20,6 +21,8 @@ public class LabourDTO {
 
     @NotEmpty
     private String labourSkill;
+
+    private List<LabourSubSkill> labourSubSkills;
 
     @NotEmpty
     @Pattern(regexp = "^[6-9]\\d{9}$", message = "Invalid Indian mobile number")
@@ -93,4 +96,13 @@ public class LabourDTO {
     public void setReviews(List<Review> reviews) {
         this.reviews = reviews;
     }
+
+    public List<LabourSubSkill> getLabourSubSkills() {
+        return labourSubSkills;
+    }
+
+    public void setLabourSubSkills(List<LabourSubSkill> labourSubSkills) {
+        this.labourSubSkills = labourSubSkills;
+    }
+
 }

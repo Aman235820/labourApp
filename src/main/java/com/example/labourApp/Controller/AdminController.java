@@ -138,6 +138,30 @@ public class AdminController {
         };
     }
 
+    @DeleteMapping("/clearAllReviews")
+    public Callable<ResponseEntity<ResponseDTO>> clearAllReviews() {
+        return () -> {
+            try {
+                CompletableFuture<ResponseDTO> res = adminService.clearAllReviews();
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
+    }
+
+    @DeleteMapping("/truncateLabourTable")
+    public Callable<ResponseEntity<ResponseDTO>> truncateLabourTable() {
+        return () -> {
+            try {
+                CompletableFuture<ResponseDTO> res = adminService.truncateLabourTable();
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
+    }
+
 
 
 

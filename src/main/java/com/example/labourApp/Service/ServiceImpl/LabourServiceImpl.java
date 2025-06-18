@@ -4,6 +4,7 @@ import com.example.labourApp.Entity.Labour;
 import com.example.labourApp.Entity.Review;
 import com.example.labourApp.Entity.Bookings;
 import com.example.labourApp.Entity.User;
+import com.example.labourApp.Entity.LabourSubSkill;
 import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.PaginationResponseDTO;
@@ -286,15 +287,14 @@ public class LabourServiceImpl implements LabourService {
 
         return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Unable to fetch requests!!"));
 
-
     }
-
 
     private LabourDTO mapEntityToDto(Labour labour) {
         LabourDTO dto = new LabourDTO();
         dto.setLabourId(labour.getLabourId());
         dto.setLabourName(labour.getLabourName());
         dto.setLabourSkill(labour.getLabourSkill());
+        dto.setLabourSubSkills(labour.getLabourSubSkills());
         dto.setLabourMobileNo(labour.getLabourMobileNo());
         dto.setRating(labour.getRating());
         dto.setRatingCount(labour.getRatingCount());
@@ -311,6 +311,17 @@ public class LabourServiceImpl implements LabourService {
         labour.setRating(dto.getRating());
         labour.setRatingCount(dto.getRatingCount());
         labour.setReviews(dto.getReviews());
+        
+        // Handle sub-skills with proper bidirectional relationship
+        if (dto.getLabourSubSkills() != null && !dto.getLabourSubSkills().isEmpty()) {
+            List<LabourSubSkill> subSkills = new ArrayList<>();
+            for (LabourSubSkill subSkill : dto.getLabourSubSkills()) {
+                subSkill.setLabour(labour); // Set the labour reference
+                subSkills.add(subSkill);
+            }
+            labour.setLabourSubSkills(subSkills);
+        }
+        
         return labour;
     }
 }

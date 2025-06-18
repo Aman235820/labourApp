@@ -102,7 +102,6 @@ public class LabourController {
 
     }
 
-
     @GetMapping("/setBookingStatus")
     public Callable<ResponseEntity<ResponseDTO>> setBookingStatus(
 

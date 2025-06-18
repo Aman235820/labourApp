@@ -46,16 +46,33 @@ public class AdminServiceImpl implements AdminService {
     BookingRepository bookingRepository;
 
     @Async
+    @Transactional
     public CompletableFuture<ResponseDTO> removeLabour(Integer labourId) {
 
-        boolean isAlreadyExists = labourRepository.existsById(labourId);
+        Optional<Labour> labourOptional = labourRepository.findById(labourId);
 
-        if (!isAlreadyExists) {
+        if (labourOptional.isEmpty()) {
             return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Labour not found in Database !!"));
         }
 
-        labourRepository.deleteById(labourId);
-        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully Deleted"));
+        Labour labour = labourOptional.get();
+        
+        // Delete all bookings associated with this labour
+        Optional<List<Bookings>> bookingsOptional = bookingRepository.findByLabourId(labourId);
+        if (bookingsOptional.isPresent() && !bookingsOptional.get().isEmpty()) {
+            bookingRepository.deleteAll(bookingsOptional.get());
+        }
+        
+        // Clear the reviews list to ensure proper cascade
+        labour.getReviews().clear();
+        
+        // Clear the labourSubSkills list to ensure proper cascade
+        labour.getLabourSubSkills().clear();
+        
+        // Delete the labour (this will cascade to delete all associated reviews and sub-skills)
+        labourRepository.delete(labour);
+        
+        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully Deleted Labour and all associated reviews, sub-skills, and bookings"));
     }
 
     @Async
@@ -249,6 +266,36 @@ public class AdminServiceImpl implements AdminService {
                 });
 
 
+    }
+
+    @Async
+    @Transactional
+    public CompletableFuture<ResponseDTO> clearAllReviews() {
+        try {
+            // This will properly handle foreign key constraints
+            List<Labour> allLabours = labourRepository.findAll();
+            for (Labour labour : allLabours) {
+                labour.getReviews().clear();
+            }
+            labourRepository.saveAll(allLabours);
+            
+            return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully cleared all reviews"));
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Failed to clear reviews: " + e.getMessage()));
+        }
+    }
+
+    @Async
+    @Transactional
+    public CompletableFuture<ResponseDTO> truncateLabourTable() {
+        try {
+            // Use the repository method that handles foreign key constraints
+            labourRepository.truncateLabourTable();
+            
+            return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully truncated Labour table"));
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Failed to truncate Labour table: " + e.getMessage()));
+        }
     }
 
     private boolean isRowEmpty(Row row) {

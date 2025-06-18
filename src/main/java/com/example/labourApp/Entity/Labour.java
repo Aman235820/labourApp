@@ -19,6 +19,9 @@ public class Labour {
 
     private String labourSkill;
 
+    @OneToMany(mappedBy = "labour" , cascade = CascadeType.ALL , orphanRemoval = true , fetch = FetchType.EAGER)
+    private List<LabourSubSkill> labourSubSkills = new ArrayList<>();
+
     @Column(unique = true, nullable = false)
     private String labourMobileNo;
 
@@ -98,6 +101,14 @@ public class Labour {
 
     public void setReviews(List<Review> list) {
         this.reviews = list;
+    }
+
+    public List<LabourSubSkill> getLabourSubSkills() {
+        return labourSubSkills;
+    }
+
+    public void setLabourSubSkills(List<LabourSubSkill> labourSubSkills) {
+        this.labourSubSkills = labourSubSkills;
     }
 
 }

@@ -23,4 +23,8 @@ public interface AdminService {
     CompletableFuture<ResponseEntity<ResponseDTO>> deleteBooking(Integer bookingId);
 
     CompletableFuture<ResponseDTO> getAppStats();
+
+    CompletableFuture<ResponseDTO> clearAllReviews();
+
+    CompletableFuture<ResponseDTO> truncateLabourTable();
 }
