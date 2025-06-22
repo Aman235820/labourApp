@@ -1,0 +1,86 @@
+package com.example.labourApp.Controller;
+
+
+import com.example.labourApp.Models.LabourDTO;
+import com.example.labourApp.Models.ResponseDTO;
+import com.example.labourApp.Security.JwtHelper;
+import com.example.labourApp.Security.OtpRequestDTO;
+import com.example.labourApp.Security.OtpService;
+import com.example.labourApp.Service.LabourService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    @Autowired
+    private LabourService labourService;
+
+    @Autowired
+    private OtpService otpService;
+
+    @Autowired
+    private JwtHelper jwtUtil;
+
+
+    @PostMapping("/requestOTP")
+    public Callable<ResponseEntity<?>> requestOTP(@Valid @RequestBody OtpRequestDTO req) {
+        return () -> {
+            String otp = otpService.generateOtp(req.getMobile(), req.getRole());
+            return new ResponseEntity(new ResponseDTO(null,false,"OTP sent to " + req.getMobile()) , HttpStatus.OK);
+        };
+    }
+
+    @PostMapping("/registerLabour")
+    public Callable<ResponseEntity<?>> registerLabour(
+            @Valid @RequestBody LabourDTO details,
+            @RequestParam String otp
+    ) {
+        return () -> {
+            try {
+                String cachedOtp = otpService.getOtp(details.getLabourMobileNo());
+                if (otp.equals(cachedOtp)) {                                                    //If you call getOtp from within the same bean (as in verifyOtp), the cache proxy is bypassed, and the annotation is ignored. This is a well-known limitation of Spring’s proxy-based AOP.
+                    String role = otpService.getUserRole(details.getLabourMobileNo());
+                    String token = jwtUtil.generateToken(details.getLabourMobileNo(), role);
+                    otpService.clear(details.getLabourMobileNo());
+                    CompletableFuture<ResponseDTO> response = labourService.registerLabour(details);
+                    Object returnValue = response.get().getReturnValue();
+                    Map<String, Object> map = Map.of("returnValue", returnValue,
+                            "token", token
+                    );
+                    return new ResponseEntity<>(map, HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>(new ResponseDTO(null, false, "Wrong OTP !!"), HttpStatus.OK);
+                }
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to register"), HttpStatus.BAD_REQUEST);
+            }
+        };
+    }
+
+    @GetMapping("/labourLogin")
+    public Callable<ResponseEntity<ResponseDTO>> labourLogin(@RequestParam String mobileNumber) {
+
+        return () -> {
+            try {
+
+                CompletableFuture<ResponseDTO> response = labourService.labourLogin(mobileNumber);
+
+                return new ResponseEntity<>(response.get(), HttpStatus.OK);
+
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to fetch"), HttpStatus.BAD_REQUEST);
+            }
+        };
+
+    }
+
+}

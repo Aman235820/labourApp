@@ -3,6 +3,9 @@ package com.example.labourApp.Controller;
 import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.ResponseDTO;
+import com.example.labourApp.Security.JwtHelper;
+import com.example.labourApp.Security.OtpRequestDTO;
+import com.example.labourApp.Security.OtpService;
 import com.example.labourApp.Service.LabourService;
 import jakarta.validation.Valid;
 import org.aspectj.weaver.ast.Call;
@@ -28,41 +31,7 @@ public class LabourController {
     }
 
 
-    @PostMapping("/registerLabour")
-    public Callable<ResponseEntity<ResponseDTO>> registerLabour(
-            @Valid @RequestBody LabourDTO details
-    ) {
-        return () -> {        //returns immediately with a Callable, so the main servlet thread is released
-            try {
 
-                CompletableFuture<ResponseDTO> response = labourService.registerLabour(details);
-
-                return new ResponseEntity<>(response.get(), HttpStatus.OK);
-
-            } catch (Exception ce) {
-                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to register"), HttpStatus.BAD_REQUEST);
-            }
-        };
-
-
-    }
-
-    @GetMapping("/labourLogin")
-    public Callable<ResponseEntity<ResponseDTO>> labourLogin(@RequestParam String mobileNumber) {
-
-        return () -> {
-            try {
-
-                CompletableFuture<ResponseDTO> response = labourService.labourLogin(mobileNumber);
-
-                return new ResponseEntity<>(response.get(), HttpStatus.OK);
-
-            } catch (Exception ce) {
-                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to fetch"), HttpStatus.BAD_REQUEST);
-            }
-        };
-
-    }
 
     @GetMapping("/showMyReviews/{labourId}")
     public Callable<ResponseEntity<ResponseDTO>> showMyReviews(
