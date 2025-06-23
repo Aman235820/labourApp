@@ -23,11 +23,11 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable) // 👈 Proper way to disable CSRF in Spring Security 6.1+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/labourapp/labourReq/**").permitAll()
+                        .requestMatchers("/labourReq/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/labourapp/labour/**").hasRole("LABOUR")
-                        .requestMatchers("/labourapp/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/labourapp/user/**").hasRole("USER")
+                        .requestMatchers("/labour/**").permitAll()//.hasRole("LABOUR")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 ).exceptionHandling(ex -> ex
                         .accessDeniedHandler((request, response, accessDeniedException) -> {

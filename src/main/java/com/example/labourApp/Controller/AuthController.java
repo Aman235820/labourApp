@@ -47,7 +47,7 @@ public class AuthController {
         return () -> {
             try {
                 String cachedOtp = otpService.getOtp(details.getLabourMobileNo());
-                if (otp.equals(cachedOtp)) {                                                    //If you call getOtp from within the same bean (as in verifyOtp), the cache proxy is bypassed, and the annotation is ignored. This is a well-known limitation of Spring’s proxy-based AOP.
+                if (otp.equals(cachedOtp)) {                                                    //If you call getOtp from within the same bean (as in verifyOtp), the cache proxy is bypassed, and the annotation is ignored. This is a well-known limitation of Spring's proxy-based AOP.
                     String role = otpService.getUserRole(details.getLabourMobileNo());
                     String token = jwtUtil.generateToken(details.getLabourMobileNo(), role);
                     otpService.clear(details.getLabourMobileNo());
@@ -81,6 +81,12 @@ public class AuthController {
             }
         };
 
+    }
+
+    @GetMapping("/generateTestToken")
+    public ResponseEntity<String> generateTestToken(@RequestParam String mobile, @RequestParam String role) {
+        String token = jwtUtil.generateToken(mobile, role);
+        return ResponseEntity.ok(token);
     }
 
 }
