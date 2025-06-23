@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -17,15 +19,15 @@ public class SecurityConfig {
     private JwtFilter jwtFilter;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public DefaultSecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) // 👈 Proper way to disable CSRF in Spring Security 6.1+
+                .csrf(AbstractHttpConfigurer::disable) // 👈 Proper way to disable CSRF in Spring Security 6.1+
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/labourapp/labourReq/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/labourReq/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/labour/**").hasRole("LABOUR")
-                        .requestMatchers("/user/**").hasRole("USER")
+                        .requestMatchers("/labourapp/labour/**").hasRole("LABOUR")
+                        .requestMatchers("/labourapp/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/labourapp/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 ).exceptionHandling(ex -> ex
                         .accessDeniedHandler((request, response, accessDeniedException) -> {

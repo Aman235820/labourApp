@@ -37,6 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     String mobile = jwtUtil.extractMobile(jwt);
                     String role = jwtUtil.extractRole(jwt);
                     List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                    System.out.println("Authorities for " + mobile + ": " + authorities);
                     Authentication auth = new UsernamePasswordAuthenticationToken(mobile, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
