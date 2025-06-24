@@ -45,19 +45,19 @@ public class UserServiceImpl implements UserService {
     public CompletableFuture<ResponseDTO> createUser(UserDTO request) {
 
 
-        String email = request.getEmail();
+        String mobile = request.getMobileNumber();
 
-        boolean isAlreadyExists = userRepository.existsByEmail(email);
+        boolean isAlreadyExists = userRepository.existsByMobileNumber(mobile);
 
         if (isAlreadyExists) {
-            return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Already a registered emailID , try different !!"));
+            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Already a registered mobile number , try different !!"));
         }
 
         User user = mapper.convertValue(request, User.class);
 
         userRepository.save(user);
 
-        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Registered Successfully"));
+        return CompletableFuture.completedFuture(new ResponseDTO(user, false, "Registered Successfully"));
 
     }
 
@@ -68,16 +68,18 @@ public class UserServiceImpl implements UserService {
         String email = request.getEmail();
         String password = request.getPassword();
 
-        Optional<User> userOptional = userRepository.findByEmail(email);
+        //Optional<User> userOptional = userRepository.findByEmail(email);
+
+        Optional<User> userOptional = userRepository.findByMobileNumber(request.getMobileNumber());
 
         if (userOptional.isEmpty()) {
             return CompletableFuture.completedFuture(new ResponseDTO(null, false, "User not found !!"));
         }
 
         User user = userOptional.get();
-        if (!user.getPassword().equals(password)) {
-            return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Wrong password !!"));
-        }
+//        if (!user.getPassword().equals(password)) {
+//            return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Wrong password !!"));
+//        }
 
         Map<String, Object> result = new HashMap<>();
         result.put("name", user.getFullName());
@@ -111,6 +113,7 @@ public class UserServiceImpl implements UserService {
             book.setLabourId(labourId);
             book.setUserName(user.getFullName());
             book.setLabourName(labour.getLabourName());
+            book.setLabourSkill(labour.getLabourSkill());
             book.setUserMobileNumber(user.getMobileNumber());
             book.setLabourMobileNo(labour.getLabourMobileNo());
             book.setBookingTime(bookingDetails.getBookingTime());

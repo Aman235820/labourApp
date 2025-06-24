@@ -28,37 +28,6 @@ public class UserController {
     @Autowired
     private LabourService labourService;
 
-    @PostMapping("/userLogin")
-    public Callable<ResponseEntity<ResponseDTO>> userLogin(@RequestBody UserDTO request) {
-        return () -> {
-            try {
-                CompletableFuture<ResponseDTO> res = userService.loginUser(request);
-
-                return new ResponseEntity<>(res.get(), HttpStatus.OK);
-
-            } catch (Exception ce) {
-                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to get user"), HttpStatus.BAD_REQUEST);
-            }
-        };
-
-    }
-
-    @PostMapping("/registerUser")
-    public Callable<ResponseEntity<ResponseDTO>> createUser(@RequestBody UserDTO request) {
-        return () -> {
-            try {
-
-                CompletableFuture<ResponseDTO> res = userService.createUser(request);
-
-                return new ResponseEntity<>(res.get(), HttpStatus.OK);
-
-            } catch (Exception ce) {
-                return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
-            }
-        };
-    }
-
-
     @PostMapping("/bookLabour")
     public Callable<ResponseEntity<ResponseDTO>> bookLabour(
             @RequestBody BookingDTO bookingDetails

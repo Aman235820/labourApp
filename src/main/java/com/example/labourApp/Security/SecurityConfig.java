@@ -20,15 +20,12 @@ public class SecurityConfig {
 
     @Bean
     public DefaultSecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable) // 👈 Proper way to disable CSRF in Spring Security 6.1+
+        return  http
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/labourReq/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/labour/**").permitAll()//.hasRole("LABOUR")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/user/**").hasRole("USER")
-                        .anyRequest().authenticated()
+                       // .requestMatchers("/auth/**").permitAll()
+                                .anyRequest().permitAll()
+                      //  .anyRequest().authenticated()
                 ).exceptionHandling(ex -> ex
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
