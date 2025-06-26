@@ -27,4 +27,6 @@ public interface LabourService {
     CompletableFuture<ResponseDTO> labourLogin(String mobileNumber);
 
     CompletableFuture<ResponseDTO> showMyReviews(Integer labourId, String sortBy, String sortOrder);
+
+    CompletableFuture<ResponseDTO> updateLabourDetails(LabourDTO labourDTO);
 }

@@ -1,5 +1,6 @@
 package com.example.labourApp.Service.ServiceImpl;
 
+import com.example.labourApp.CustomExceptions.ResourceNotFoundException;
 import com.example.labourApp.Entity.Labour;
 import com.example.labourApp.Entity.Review;
 import com.example.labourApp.Entity.Bookings;
@@ -70,6 +71,31 @@ public class LabourServiceImpl implements LabourService {
         }
 
         return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Didn't find any labour with this mobile number !!"));
+    }
+
+
+    @Async
+    public CompletableFuture<ResponseDTO> updateLabourDetails(LabourDTO labourDTO) {
+        Labour labour = labourRepository.findById(labourDTO.getLabourId())
+                .orElseThrow(() -> new ResourceNotFoundException("Labour", "LabourId", labourDTO.getLabourId()));
+
+        if (labourDTO.getLabourName() != null) {
+            labour.setLabourName(labourDTO.getLabourName());
+        }
+        if (labourDTO.getLabourSkill() != null) {
+            labour.setLabourSkill(labourDTO.getLabourSkill());
+            labour.setLabourSubSkills(null);
+        }
+
+        if (labourDTO.getLabourSubSkills() != null) {
+            for (LabourSubSkill subSkill : labourDTO.getLabourSubSkills()) {
+                subSkill.setLabour(labour);
+            }
+            labour.setLabourSubSkills(labourDTO.getLabourSubSkills());
+        }
+
+        labourRepository.save(labour);
+        return CompletableFuture.completedFuture(new ResponseDTO(labour, false, "Labour details updated successfully!"));
     }
 
 

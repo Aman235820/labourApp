@@ -30,7 +30,17 @@ public class LabourController {
         return "Working fine";
     }
 
-
+    @PatchMapping("/updateLabourDetails")
+    public Callable<ResponseEntity<ResponseDTO>> updateLabourDetails(@RequestBody LabourDTO labourDTO) {
+        return () -> {
+            try {
+                CompletableFuture<ResponseDTO> res = labourService.updateLabourDetails(labourDTO);
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Unable to update Labour !! Error : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
+    }
 
 
     @GetMapping("/showMyReviews/{labourId}")

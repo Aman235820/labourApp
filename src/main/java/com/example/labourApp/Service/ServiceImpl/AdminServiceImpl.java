@@ -3,6 +3,7 @@ package com.example.labourApp.Service.ServiceImpl;
 import com.example.labourApp.CustomExceptions.ResourceNotFoundException;
 import com.example.labourApp.Entity.Bookings;
 import com.example.labourApp.Entity.Labour;
+import com.example.labourApp.Entity.LabourSubSkill;
 import com.example.labourApp.Entity.User;
 import com.example.labourApp.Models.*;
 import com.example.labourApp.Repository.BookingRepository;
@@ -31,6 +32,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import static org.modelmapper.Converters.Collection.map;
+
 @Service
 public class AdminServiceImpl implements AdminService {
 
@@ -56,22 +59,22 @@ public class AdminServiceImpl implements AdminService {
         }
 
         Labour labour = labourOptional.get();
-        
+
         // Delete all bookings associated with this labour
         Optional<List<Bookings>> bookingsOptional = bookingRepository.findByLabourId(labourId);
         if (bookingsOptional.isPresent() && !bookingsOptional.get().isEmpty()) {
             bookingRepository.deleteAll(bookingsOptional.get());
         }
-        
+
         // Clear the reviews list to ensure proper cascade
         labour.getReviews().clear();
-        
+
         // Clear the labourSubSkills list to ensure proper cascade
         labour.getLabourSubSkills().clear();
-        
+
         // Delete the labour (this will cascade to delete all associated reviews and sub-skills)
         labourRepository.delete(labour);
-        
+
         return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully Deleted Labour and all associated reviews, sub-skills, and bookings"));
     }
 
@@ -141,7 +144,30 @@ public class AdminServiceImpl implements AdminService {
                     Labour labour = new Labour();
                     labour.setLabourName(row.getCell(0).getStringCellValue());
                     labour.setLabourSkill(row.getCell(1).getStringCellValue());
-                    labour.setLabourMobileNo(row.getCell(2).getStringCellValue());
+                    labour.setLabourMobileNo(row.getCell(3).getStringCellValue());
+
+
+                    /*   CONVECTIONAL WAY
+                    List<String> list = List.of((row.getCell(2).getStringCellValue()).split(","));
+                    List<LabourSubSkill> finalList = new ArrayList<>();
+                    for (String x : list) {
+                        LabourSubSkill obj = new LabourSubSkill();
+                        obj.setSubSkillName(x);
+                        finalList.add(obj);
+                    }*/
+
+                    //STREAM API
+
+                    List<LabourSubSkill> finalList = Arrays.stream(row.getCell(2).getStringCellValue().split(","))
+                            .map(String::trim)
+                            .map(x -> {
+                                LabourSubSkill obj = new LabourSubSkill();
+                                obj.setSubSkillName(x);
+                                obj.setLabour(labour);
+                                return obj;
+                            }).collect(Collectors.toList());
+
+                    labour.setLabourSubSkills(finalList);
 
                     labours.add(labour);
                 }, executorService);
@@ -278,7 +304,7 @@ public class AdminServiceImpl implements AdminService {
                 labour.getReviews().clear();
             }
             labourRepository.saveAll(allLabours);
-            
+
             return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully cleared all reviews"));
         } catch (Exception e) {
             return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Failed to clear reviews: " + e.getMessage()));
@@ -286,12 +312,11 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Async
-    @Transactional
     public CompletableFuture<ResponseDTO> truncateLabourTable() {
         try {
             // Use the repository method that handles foreign key constraints
             labourRepository.truncateLabourTable();
-            
+
             return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Successfully truncated Labour table"));
         } catch (Exception e) {
             return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Failed to truncate Labour table: " + e.getMessage()));
