@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
@@ -60,6 +62,18 @@ public class LabourController {
                 return new ResponseEntity<>(new ResponseDTO(null, true, "Unable to fetch reviews !!"), HttpStatus.BAD_REQUEST);
             }
 
+        };
+    }
+
+    @GetMapping("/showMyRatings/{labourId}")
+    public Callable<ResponseEntity<ResponseDTO>> showMyRatings(@PathVariable  Integer labourId) {
+        return () -> {
+            try {
+                CompletableFuture<ResponseDTO> res = labourService.showMyRatings(labourId);
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Unable to fetch ratings :" + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
         };
     }
 

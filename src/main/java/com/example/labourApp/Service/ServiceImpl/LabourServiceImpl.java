@@ -73,6 +73,25 @@ public class LabourServiceImpl implements LabourService {
         return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Didn't find any labour with this mobile number !!"));
     }
 
+    @Async
+    public CompletableFuture<ResponseDTO> showMyRatings(Integer labourId) {
+
+        Optional<Labour> labour = labourRepository.findById(labourId);
+
+        Map<String, Object> map = new HashMap<>();
+
+        if (labour.isPresent()) {
+            map.put("overallRating", labour.get().getRating());
+            map.put("ratingCount", labour.get().getRatingCount());
+
+            return CompletableFuture.completedFuture(new ResponseDTO(map, false, "Data Fetched Successfully !!"));
+
+        } else {
+            throw new ResourceNotFoundException("Labour", "LabourId", labourId);
+        }
+
+    }
+
 
     @Async
     public CompletableFuture<ResponseDTO> updateLabourDetails(LabourDTO labourDTO) {

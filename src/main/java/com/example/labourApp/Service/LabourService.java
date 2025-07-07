@@ -29,4 +29,6 @@ public interface LabourService {
     CompletableFuture<ResponseDTO> showMyReviews(Integer labourId, String sortBy, String sortOrder);
 
     CompletableFuture<ResponseDTO> updateLabourDetails(LabourDTO labourDTO);
+
+    CompletableFuture<ResponseDTO> showMyRatings(Integer labourId);
 }
