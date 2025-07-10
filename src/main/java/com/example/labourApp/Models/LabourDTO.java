@@ -6,13 +6,14 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Data
-public class LabourDTO {
+public class LabourDTO implements Serializable {
 
     private Integer labourId;
 

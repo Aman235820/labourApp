@@ -16,6 +16,8 @@ import com.example.labourApp.Repository.UserRepository;
 import com.example.labourApp.Service.LabourService;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +50,7 @@ public class LabourServiceImpl implements LabourService {
     UserRepository userRepository;
 
     @Async
+    @CacheEvict(value = "labourData",  allEntries = true)
     public CompletableFuture<ResponseDTO> registerLabour(LabourDTO details) {
 
         String mobileNo = details.getLabourMobileNo();
@@ -94,6 +97,7 @@ public class LabourServiceImpl implements LabourService {
 
 
     @Async
+    @CacheEvict(value = "labourData", allEntries = true)
     public CompletableFuture<ResponseDTO> updateLabourDetails(LabourDTO labourDTO) {
         Labour labour = labourRepository.findById(labourDTO.getLabourId())
                 .orElseThrow(() -> new ResourceNotFoundException("Labour", "LabourId", labourDTO.getLabourId()));
@@ -119,6 +123,7 @@ public class LabourServiceImpl implements LabourService {
 
 
     @Async
+    @Cacheable(key = "#category + '_' + #paginationRequestDTO.pageNumber + '_' + #paginationRequestDTO.pageSize + '_' + #paginationRequestDTO.sortBy + '_' + #paginationRequestDTO.sortOrder", value = "labourData")
     public CompletableFuture<PaginationResponseDTO> findLabourByCategory(PaginationRequestDTO paginationRequestDTO, String category) {
 
         Integer pageNumber = paginationRequestDTO.getPageNumber();
@@ -171,6 +176,7 @@ public class LabourServiceImpl implements LabourService {
     }
 
     @Async
+    @Cacheable(value = "labourData", key = "#labourId")
     public CompletableFuture<ResponseDTO> findLabour(Integer labourId) {
         Optional<Labour> labour = labourRepository.findById(labourId);
         if (labour.isPresent()) {
@@ -182,6 +188,7 @@ public class LabourServiceImpl implements LabourService {
 
 
     @Async
+    @CacheEvict(value = "labourData", allEntries = true)
     public CompletableFuture<ResponseDTO> rateLabour(Map<String, Object> reqBody) {
         Integer userId = (Integer) reqBody.get("userId");
         Integer labourId = (Integer) reqBody.get("labourId");
@@ -292,6 +299,7 @@ public class LabourServiceImpl implements LabourService {
 
 
     @Async
+    @Cacheable(value = "labourData", key = "#labourId + '_' + #sortBy + '_' + #sortOrder")
     public CompletableFuture<ResponseDTO> showMyReviews(Integer labourId, String sortBy, String sortOrder) {
 
         Optional<Labour> optionalLabour = labourRepository.findById(labourId);

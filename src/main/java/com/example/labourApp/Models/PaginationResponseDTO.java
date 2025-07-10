@@ -1,6 +1,8 @@
 package com.example.labourApp.Models;
 
-public class PaginationResponseDTO {
+import java.io.Serializable;
+
+public class PaginationResponseDTO implements Serializable {
     private Object content;
     private int pageNumber;
     private int pageSize;

@@ -2,7 +2,9 @@ package com.example.labourApp.Models;
 
 import com.example.labourApp.EnumClass;
 
-public class PaginationRequestDTO {
+import java.io.Serializable;
+
+public class PaginationRequestDTO implements Serializable {
     private Integer pageNumber = EnumClass.PAGE_NUMBER;
     private Integer pageSize = EnumClass.PAGE_SIZE;
     private String sortBy = EnumClass.SORT_BY;
