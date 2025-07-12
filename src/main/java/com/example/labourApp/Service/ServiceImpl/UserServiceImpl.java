@@ -95,6 +95,7 @@ public class UserServiceImpl implements UserService {
     public CompletableFuture<ResponseDTO> bookLabourService(BookingDTO bookingDetails) {
         int userId = bookingDetails.getUserId();
         int labourId = bookingDetails.getLabourId();
+        String labourServiceUsed = bookingDetails.getLabourSkill();
 
         return CompletableFuture.supplyAsync(() -> {
             Optional<User> userOptional = userRepository.findById(userId);
@@ -113,7 +114,7 @@ public class UserServiceImpl implements UserService {
             book.setLabourId(labourId);
             book.setUserName(user.getFullName());
             book.setLabourName(labour.getLabourName());
-            book.setLabourSkill(labour.getLabourSkill());
+            book.setLabourSkill(labourServiceUsed);
             book.setUserMobileNumber(user.getMobileNumber());
             book.setLabourMobileNo(labour.getLabourMobileNo());
             book.setBookingTime(bookingDetails.getBookingTime());
@@ -123,6 +124,7 @@ public class UserServiceImpl implements UserService {
 //            2 : Booking accepted
 //            3 : Work done
 //            -1 : Booking rejected by labour
+
 
             book.setBookingStatusCode(1);
 
