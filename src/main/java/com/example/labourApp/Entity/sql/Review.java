@@ -1,4 +1,4 @@
-package com.example.labourApp.Entity;
+package com.example.labourApp.Entity.sql;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

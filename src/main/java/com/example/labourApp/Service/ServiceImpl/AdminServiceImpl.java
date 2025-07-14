@@ -1,14 +1,14 @@
 package com.example.labourApp.Service.ServiceImpl;
 
 import com.example.labourApp.CustomExceptions.ResourceNotFoundException;
-import com.example.labourApp.Entity.Bookings;
-import com.example.labourApp.Entity.Labour;
-import com.example.labourApp.Entity.LabourSubSkill;
-import com.example.labourApp.Entity.User;
+import com.example.labourApp.Entity.sql.Bookings;
+import com.example.labourApp.Entity.sql.Labour;
+import com.example.labourApp.Entity.sql.LabourSubSkill;
+import com.example.labourApp.Entity.sql.User;
 import com.example.labourApp.Models.*;
-import com.example.labourApp.Repository.BookingRepository;
-import com.example.labourApp.Repository.LabourRepository;
-import com.example.labourApp.Repository.UserRepository;
+import com.example.labourApp.Repository.sql.BookingRepository;
+import com.example.labourApp.Repository.sql.LabourRepository;
+import com.example.labourApp.Repository.sql.UserRepository;
 import com.example.labourApp.Service.AdminService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;

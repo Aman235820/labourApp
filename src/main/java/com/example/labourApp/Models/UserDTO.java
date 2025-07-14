@@ -15,7 +15,7 @@ public class UserDTO {
 
     private String mobileNumber;
 
-
+    private String registrationTime;
 
     // Getter and Setter for userId
     public Integer getUserId() {
@@ -62,4 +62,13 @@ public class UserDTO {
     public void setMobileNumber(String mobileNumber) {
         this.mobileNumber = mobileNumber;
     }
+
+    public String getRegistrationTime() {
+        return registrationTime;
+    }
+
+    public void setRegistrationTime(String registrationTime) {
+        this.registrationTime = registrationTime;
+    }
+
 }

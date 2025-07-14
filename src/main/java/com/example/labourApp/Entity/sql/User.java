@@ -1,4 +1,4 @@
-package com.example.labourApp.Entity;
+package com.example.labourApp.Entity.sql;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -16,7 +16,7 @@ public class User {
     private String email;
     private String password;
     private String mobileNumber;
-
+    private String registrationTime;
 
 
     // Getter and Setter for id
@@ -63,6 +63,16 @@ public class User {
     public void setMobileNumber(String mobileNumber) {
         this.mobileNumber = mobileNumber;
     }
+
+
+    public String getRegistrationTime() {
+        return registrationTime;
+    }
+
+    public void setRegistrationTime(String registrationTime) {
+        this.registrationTime = registrationTime;
+    }
+
 
     @Override
     public String toString() {

@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -58,6 +60,14 @@ public class AuthController {
                     String role = otpService.getUserRole(details.getLabourMobileNo());
                     String token = jwtUtil.generateToken(details.getLabourMobileNo(), role);
                     otpService.clear(details.getLabourMobileNo());
+
+                    // Get current date and time
+                    LocalDateTime now = LocalDateTime.now();
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+                    String formattedDateTime = now.format(formatter);
+
+                    details.setRegistrationTime(formattedDateTime);
+
                     CompletableFuture<ResponseDTO> response = labourService.registerLabour(details);
                     Object returnValue = response.get().getReturnValue();
                     Map<String, Object> map = Map.of("returnValue", returnValue,
@@ -141,6 +151,14 @@ public class AuthController {
                     String role = otpService.getUserRole(request.getMobileNumber());
                     String token = jwtUtil.generateToken(request.getMobileNumber(), role);
                     otpService.clear(request.getMobileNumber());
+
+                    // Get current date and time
+                    LocalDateTime now = LocalDateTime.now();
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+                    String formattedDateTime = now.format(formatter);
+
+                    request.setRegistrationTime(formattedDateTime);
+
                     CompletableFuture<ResponseDTO> res = userService.createUser(request);
                     if(res.get().getHasError()){
                         throw new Exception("Already a registered mobile number , try different !!");

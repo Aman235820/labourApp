@@ -1,18 +1,18 @@
 package com.example.labourApp.Service.ServiceImpl;
 
 import com.example.labourApp.CustomExceptions.ResourceNotFoundException;
-import com.example.labourApp.Entity.Labour;
-import com.example.labourApp.Entity.Review;
-import com.example.labourApp.Entity.Bookings;
-import com.example.labourApp.Entity.User;
-import com.example.labourApp.Entity.LabourSubSkill;
+import com.example.labourApp.Entity.sql.Labour;
+import com.example.labourApp.Entity.sql.Review;
+import com.example.labourApp.Entity.sql.Bookings;
+import com.example.labourApp.Entity.sql.User;
+import com.example.labourApp.Entity.sql.LabourSubSkill;
 import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
-import com.example.labourApp.Repository.BookingRepository;
-import com.example.labourApp.Repository.LabourRepository;
-import com.example.labourApp.Repository.UserRepository;
+import com.example.labourApp.Repository.sql.BookingRepository;
+import com.example.labourApp.Repository.sql.LabourRepository;
+import com.example.labourApp.Repository.sql.UserRepository;
 import com.example.labourApp.Service.LabourService;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +26,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -359,6 +361,7 @@ public class LabourServiceImpl implements LabourService {
         dto.setRating(labour.getRating());
         dto.setRatingCount(labour.getRatingCount());
         dto.setReviews(labour.getReviews());
+        dto.setRegistrationTime(labour.getRegistrationTime());
 
         return dto;
     }
@@ -371,6 +374,7 @@ public class LabourServiceImpl implements LabourService {
         labour.setRating(dto.getRating());
         labour.setRatingCount(dto.getRatingCount());
         labour.setReviews(dto.getReviews());
+        labour.setRegistrationTime(dto.getRegistrationTime());
 
         // Handle sub-skills with proper bidirectional relationship
         if (dto.getLabourSubSkills() != null && !dto.getLabourSubSkills().isEmpty()) {

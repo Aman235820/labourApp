@@ -1,4 +1,4 @@
-package com.example.labourApp.Entity;
+package com.example.labourApp.Entity.sql;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -28,6 +28,8 @@ public class Labour {
 
     private String rating;
     private String ratingCount;
+
+    private String registrationTime;
 
     @OneToMany(mappedBy = "labour", cascade = CascadeType.ALL, orphanRemoval = true , fetch = FetchType.EAGER)
     private List<Review> reviews = new ArrayList<>();
@@ -111,5 +113,14 @@ public class Labour {
     public void setLabourSubSkills(List<LabourSubSkill> labourSubSkills) {
         this.labourSubSkills = labourSubSkills;
     }
+
+    public String getRegistrationTime() {
+        return registrationTime;
+    }
+
+    public void setRegistrationTime(String registrationTime) {
+        this.registrationTime = registrationTime;
+    }
+
 
 }

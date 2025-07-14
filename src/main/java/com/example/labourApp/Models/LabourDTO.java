@@ -1,7 +1,7 @@
 package com.example.labourApp.Models;
 
-import com.example.labourApp.Entity.LabourSubSkill;
-import com.example.labourApp.Entity.Review;
+import com.example.labourApp.Entity.sql.LabourSubSkill;
+import com.example.labourApp.Entity.sql.Review;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
@@ -24,6 +24,8 @@ public class LabourDTO implements Serializable {
     private String labourSkill;
 
     private List<LabourSubSkill> labourSubSkills;
+
+    private String registrationTime;
 
     @NotEmpty
     @Pattern(regexp = "^[6-9]\\d{9}$", message = "Invalid Indian mobile number")
@@ -105,5 +107,15 @@ public class LabourDTO implements Serializable {
     public void setLabourSubSkills(List<LabourSubSkill> labourSubSkills) {
         this.labourSubSkills = labourSubSkills;
     }
+
+    public String getRegistrationTime() {
+        return registrationTime;
+    }
+
+    public void setRegistrationTime(String registrationTime) {
+        this.registrationTime = registrationTime;
+    }
+
+
 
 }

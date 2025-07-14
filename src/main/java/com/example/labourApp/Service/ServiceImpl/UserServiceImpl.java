@@ -1,16 +1,16 @@
 package com.example.labourApp.Service.ServiceImpl;
 
-import com.example.labourApp.Entity.Bookings;
-import com.example.labourApp.Entity.Labour;
-import com.example.labourApp.Entity.Review;
-import com.example.labourApp.Entity.User;
+import com.example.labourApp.Entity.sql.Bookings;
+import com.example.labourApp.Entity.sql.Labour;
+import com.example.labourApp.Entity.sql.Review;
+import com.example.labourApp.Entity.sql.User;
 import com.example.labourApp.Models.BookingDTO;
 import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Models.UserDTO;
-import com.example.labourApp.Repository.BookingRepository;
-import com.example.labourApp.Repository.LabourRepository;
-import com.example.labourApp.Repository.UserRepository;
+import com.example.labourApp.Repository.sql.BookingRepository;
+import com.example.labourApp.Repository.sql.LabourRepository;
+import com.example.labourApp.Repository.sql.UserRepository;
 import com.example.labourApp.Service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
-package com.example.labourApp.Repository;
+package com.example.labourApp.Repository.sql;
 
-import com.example.labourApp.Entity.Bookings;
+import com.example.labourApp.Entity.sql.Bookings;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

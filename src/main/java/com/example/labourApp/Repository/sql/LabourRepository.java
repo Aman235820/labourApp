@@ -1,6 +1,6 @@
-package com.example.labourApp.Repository;
+package com.example.labourApp.Repository.sql;
 
-import com.example.labourApp.Entity.Labour;
+import com.example.labourApp.Entity.sql.Labour;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
