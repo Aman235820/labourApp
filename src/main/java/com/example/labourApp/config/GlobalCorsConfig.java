@@ -15,7 +15,7 @@ public class GlobalCorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // apply to all paths
                         .allowedOrigins("https://labour-app-react.vercel.app/" , "http://localhost:3000") // frontend origin
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS" , "PATCH")
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
