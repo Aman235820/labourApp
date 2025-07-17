@@ -114,5 +114,26 @@ public class LabourController {
         };
     }
 
+    @PatchMapping("/updateAdditionalLabourData")
+    public Callable<ResponseEntity<ResponseDTO>> updateAdditionalLabourData(@RequestBody Map<String,Object> details){
+
+        return()->{
+             try{
+                   if(details.containsKey("labourId") && details.get("labourId") != null){
+                      CompletableFuture<ResponseDTO> res = labourService.updateAdditionalLabourData(details);
+
+                      return new ResponseEntity<>(res.get() , HttpStatus.OK);
+                   }else{
+                        throw new Exception("LabourId missing !!");
+                   }
+
+             }catch(Exception ce){
+                 return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to store data : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+             }
+        };
+
+    }
+
+
 
 }

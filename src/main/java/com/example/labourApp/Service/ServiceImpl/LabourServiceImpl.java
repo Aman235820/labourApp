@@ -14,6 +14,7 @@ import com.example.labourApp.Repository.sql.BookingRepository;
 import com.example.labourApp.Repository.sql.LabourRepository;
 import com.example.labourApp.Repository.sql.UserRepository;
 import com.example.labourApp.Service.LabourService;
+import com.example.labourApp.Service.MongoDocumentService;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -50,6 +51,9 @@ public class LabourServiceImpl implements LabourService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    MongoDocumentService mongoDocumentService;
 
     @Async
     @CacheEvict(value = "labourData",  allEntries = true)
@@ -350,6 +354,12 @@ public class LabourServiceImpl implements LabourService {
         return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Unable to fetch requests!!"));
 
     }
+
+    @Async
+    public CompletableFuture<ResponseDTO> updateAdditionalLabourData(Map<String, Object> details){
+         return CompletableFuture.completedFuture(new ResponseDTO(mongoDocumentService.createMongoDocument("additionalLabourDetails" , details) , false , "Saved Successfully !!"));
+    }
+
 
     private LabourDTO mapEntityToDto(Labour labour) {
         LabourDTO dto = new LabourDTO();

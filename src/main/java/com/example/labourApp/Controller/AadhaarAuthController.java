@@ -57,7 +57,7 @@ class AadhaarAuthController {
             try {
                 details.put("labourId" , labourId);
 
-                CompletableFuture<ResponseDTO> res = mongoDocumentService.createMongoDocument("additionalLabourDetails" , details);
+                CompletableFuture<ResponseDTO> res = mongoDocumentService.createMongoDocument("labourAadhaarDetails" , details);
                 return new ResponseEntity<>(res.get(), HttpStatus.OK);
             } catch (Exception e) {
                 return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to save Aadhaar details: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
