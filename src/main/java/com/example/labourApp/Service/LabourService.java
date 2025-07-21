@@ -33,4 +33,6 @@ public interface LabourService {
     CompletableFuture<ResponseDTO> showMyRatings(Integer labourId);
 
     CompletableFuture<ResponseDTO> updateAdditionalLabourData(Map<String, Object> details);
+
+    CompletableFuture<ResponseDTO> getAdditionalLabourDetails(Integer labourId);
 }

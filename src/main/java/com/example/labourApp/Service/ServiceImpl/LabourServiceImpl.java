@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ public class LabourServiceImpl implements LabourService {
     MongoDocumentService mongoDocumentService;
 
     @Async
-    @CacheEvict(value = "labourData",  allEntries = true)
+    @CacheEvict(value = "labourData", allEntries = true)
     public CompletableFuture<ResponseDTO> registerLabour(LabourDTO details) {
 
         String mobileNo = details.getLabourMobileNo();
@@ -105,8 +106,7 @@ public class LabourServiceImpl implements LabourService {
     @Async
     @CacheEvict(value = "labourData", allEntries = true)
     public CompletableFuture<ResponseDTO> updateLabourDetails(LabourDTO labourDTO) {
-        Labour labour = labourRepository.findById(labourDTO.getLabourId())
-                .orElseThrow(() -> new ResourceNotFoundException("Labour", "LabourId", labourDTO.getLabourId()));
+        Labour labour = labourRepository.findById(labourDTO.getLabourId()).orElseThrow(() -> new ResourceNotFoundException("Labour", "LabourId", labourDTO.getLabourId()));
 
         if (labourDTO.getLabourName() != null) {
             labour.setLabourName(labourDTO.getLabourName());
@@ -152,9 +152,7 @@ public class LabourServiceImpl implements LabourService {
         }
 
 
-        List<LabourDTO> dtoList = labourList.stream()
-                .map(this::mapEntityToDto)
-                .collect(Collectors.toList());
+        List<LabourDTO> dtoList = labourList.stream().map(this::mapEntityToDto).collect(Collectors.toList());
         return CompletableFuture.completedFuture(new PaginationResponseDTO(dtoList, labourListPage.getNumber(), labourListPage.getSize(), labourListPage.getTotalElements(), labourListPage.getTotalPages(), labourListPage.isLast()));
     }
 
@@ -174,11 +172,8 @@ public class LabourServiceImpl implements LabourService {
 
         List<Labour> labourList = pageLabour.getContent();
 
-        List<LabourDTO> dtoList = labourList.stream()
-                .map(this::mapEntityToDto)
-                .collect(Collectors.toList());
-        return CompletableFuture.completedFuture(new PaginationResponseDTO(dtoList, pageLabour.getNumber(), pageLabour.getSize(),
-                pageLabour.getTotalElements(), pageLabour.getTotalPages(), pageLabour.isLast()));
+        List<LabourDTO> dtoList = labourList.stream().map(this::mapEntityToDto).collect(Collectors.toList());
+        return CompletableFuture.completedFuture(new PaginationResponseDTO(dtoList, pageLabour.getNumber(), pageLabour.getSize(), pageLabour.getTotalElements(), pageLabour.getTotalPages(), pageLabour.isLast()));
     }
 
     @Async
@@ -202,87 +197,72 @@ public class LabourServiceImpl implements LabourService {
         double rating = Double.parseDouble((reqBody.get("labourRating")).toString());
         String review = (String) reqBody.get("review");
 
-        return CompletableFuture.supplyAsync(() ->
-                        labourRepository.findById(labourId), executorService)
-                .thenCompose(optionalLabour -> {
-                    if (optionalLabour.isEmpty()) {
-                        return CompletableFuture.completedFuture(
-                                new ResponseDTO(null, true, "Labour not found")
-                        );
-                    }
+        return CompletableFuture.supplyAsync(() -> labourRepository.findById(labourId), executorService).thenCompose(optionalLabour -> {
+            if (optionalLabour.isEmpty()) {
+                return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Labour not found"));
+            }
 
-                    return bookingRepository.findByBookingIdAndUserIdAndLabourId(bookingId, userId, labourId)
-                            .map(booking -> calculateFinalRating(optionalLabour.get(), reqBody)
-                                    .thenCompose(updatedLabour ->
-                                            CompletableFuture.supplyAsync(() -> {
-                                                try {
-                                                    labourRepository.save(updatedLabour);
-                                                    LabourDTO dto = mapEntityToDto(updatedLabour);
-                                                    return new ResponseDTO(dto, false, "Rated Successfully");
-                                                } catch (Exception e) {
-                                                    return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
-                                                }
-                                            }, executorService)
-                                    ))
-                            .orElse(CompletableFuture.completedFuture(
-                                    new ResponseDTO(null, true, "No booking found for the given details")
-                            ));
-                })
-                .exceptionally(throwable ->
-                        new ResponseDTO(null, true, "Failed to process rating: " + throwable.getMessage())
-                );
+            return bookingRepository.findByBookingIdAndUserIdAndLabourId(bookingId, userId, labourId).map(booking -> calculateFinalRating(optionalLabour.get(), reqBody).thenCompose(updatedLabour -> CompletableFuture.supplyAsync(() -> {
+                try {
+                    labourRepository.save(updatedLabour);
+                    LabourDTO dto = mapEntityToDto(updatedLabour);
+                    return new ResponseDTO(dto, false, "Rated Successfully");
+                } catch (Exception e) {
+                    return new ResponseDTO(null, true, "Failed to save rating: " + e.getMessage());
+                }
+            }, executorService))).orElse(CompletableFuture.completedFuture(new ResponseDTO(null, true, "No booking found for the given details")));
+        }).exceptionally(throwable -> new ResponseDTO(null, true, "Failed to process rating: " + throwable.getMessage()));
     }
 
     @Async
     public CompletableFuture<Labour> calculateFinalRating(Labour labour, Map<String, Object> reqBody) {
         return CompletableFuture.supplyAsync(() -> {
-                    Integer userId = (Integer) reqBody.get("userId");
-                    Integer labourId = (Integer) reqBody.get("labourId");
-                    double rating = Double.parseDouble((reqBody.get("labourRating")).toString());
-                    String review = (String) reqBody.get("review");
+            Integer userId = (Integer) reqBody.get("userId");
+            Integer labourId = (Integer) reqBody.get("labourId");
+            double rating = Double.parseDouble((reqBody.get("labourRating")).toString());
+            String review = (String) reqBody.get("review");
 
-                    rating = Math.round(rating * 10) / 10.0;
+            rating = Math.round(rating * 10) / 10.0;
 
-                    String ratingCountStr = labour.getRatingCount();
-                    String ratingStr = labour.getRating();
+            String ratingCountStr = labour.getRatingCount();
+            String ratingStr = labour.getRating();
 
-                    int storedRatingCount = 0;
-                    double storedRating = 0.0;
+            int storedRatingCount = 0;
+            double storedRating = 0.0;
 
-                    if (ratingCountStr != null && !ratingCountStr.isEmpty()) {
-                        storedRatingCount = Integer.parseInt(ratingCountStr);
-                    }
+            if (ratingCountStr != null && !ratingCountStr.isEmpty()) {
+                storedRatingCount = Integer.parseInt(ratingCountStr);
+            }
 
-                    if (ratingStr != null && !ratingStr.isEmpty()) {
-                        storedRating = Double.parseDouble(ratingStr);
-                    }
+            if (ratingStr != null && !ratingStr.isEmpty()) {
+                storedRating = Double.parseDouble(ratingStr);
+            }
 
-                    storedRating = ((storedRating * storedRatingCount) + rating) / (storedRatingCount + 1);
-                    double roundedstoredRating = Math.round(storedRating * 10) / 10.0;
+            storedRating = ((storedRating * storedRatingCount) + rating) / (storedRatingCount + 1);
+            double roundedstoredRating = Math.round(storedRating * 10) / 10.0;
 
-                    return new Object[]{roundedstoredRating, storedRatingCount};
-                }, executorService)
-                .thenApply(params -> {
-                    Integer userId = (Integer) reqBody.get("userId");
-                    double rating = Double.parseDouble((reqBody.get("labourRating")).toString());
-                    String review = (String) reqBody.get("review");
+            return new Object[]{roundedstoredRating, storedRatingCount};
+        }, executorService).thenApply(params -> {
+            Integer userId = (Integer) reqBody.get("userId");
+            double rating = Double.parseDouble((reqBody.get("labourRating")).toString());
+            String review = (String) reqBody.get("review");
 
-                    double roundedstoredRating = (double) params[0];
-                    int storedRatingCount = (int) params[1];
+            double roundedstoredRating = (double) params[0];
+            int storedRatingCount = (int) params[1];
 
-                    labour.setRating(Double.toString(roundedstoredRating));
-                    labour.setRatingCount(Integer.toString(storedRatingCount + 1));
+            labour.setRating(Double.toString(roundedstoredRating));
+            labour.setRatingCount(Integer.toString(storedRatingCount + 1));
 
-                    Review newReview = new Review();
-                    newReview.setUserId(userId);
-                    newReview.setRating(rating);
-                    newReview.setReview(review);
-                    newReview.setLabour(labour);
-                    newReview.setReviewTime(LocalDate.now());
-                    labour.addReviews(newReview);
+            Review newReview = new Review();
+            newReview.setUserId(userId);
+            newReview.setRating(rating);
+            newReview.setReview(review);
+            newReview.setLabour(labour);
+            newReview.setReviewTime(LocalDate.now());
+            labour.addReviews(newReview);
 
-                    return labour;
-                });
+            return labour;
+        });
     }
 
 
@@ -356,8 +336,31 @@ public class LabourServiceImpl implements LabourService {
     }
 
     @Async
-    public CompletableFuture<ResponseDTO> updateAdditionalLabourData(Map<String, Object> details){
-         return CompletableFuture.completedFuture(new ResponseDTO(mongoDocumentService.createMongoDocument("additionalLabourDetails" , details) , false , "Saved Successfully !!"));
+    public CompletableFuture<ResponseDTO> updateAdditionalLabourData(Map<String, Object> details) {
+
+        try {
+            CompletableFuture<ResponseDTO> res = mongoDocumentService.findDocumentsByField("additionalLabourDetails", "labourId", details.get("labourId"));
+
+            List<Map<String, Object>> labDetails = (List<Map<String, Object>>) res.get().returnValue;
+
+            if (labDetails != null && !labDetails.isEmpty()) {
+                Map<String, Object> detail = labDetails.get(0);
+                String docId = detail.get("_id").toString();
+                // Remove _id from details to avoid immutable field error
+                details.remove("_id");
+                return mongoDocumentService.updateDocument("additionalLabourDetails", docId, details);
+            }
+
+            return CompletableFuture.completedFuture(new ResponseDTO(mongoDocumentService.createMongoDocument("additionalLabourDetails", details), false, "Saved Successfully !!"));
+
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "An error occured : " + e.getMessage()));
+        }
+    }
+
+    @Async
+    public CompletableFuture<ResponseDTO> getAdditionalLabourDetails(Integer labourId) {
+        return mongoDocumentService.findDocumentsByField("additionalLabourDetails", "labourId", labourId);
     }
 
 

@@ -8,8 +8,10 @@ import com.example.labourApp.Security.OtpRequestDTO;
 import com.example.labourApp.Security.OtpService;
 import com.example.labourApp.Service.LabourService;
 import jakarta.validation.Valid;
+import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
 import org.aspectj.weaver.ast.Call;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.aggregation.StringOperators;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -66,7 +68,7 @@ public class LabourController {
     }
 
     @GetMapping("/showMyRatings/{labourId}")
-    public Callable<ResponseEntity<ResponseDTO>> showMyRatings(@PathVariable  Integer labourId) {
+    public Callable<ResponseEntity<ResponseDTO>> showMyRatings(@PathVariable Integer labourId) {
         return () -> {
             try {
                 CompletableFuture<ResponseDTO> res = labourService.showMyRatings(labourId);
@@ -115,25 +117,39 @@ public class LabourController {
     }
 
     @PatchMapping("/updateAdditionalLabourData")
-    public Callable<ResponseEntity<ResponseDTO>> updateAdditionalLabourData(@RequestBody Map<String,Object> details){
+    public Callable<ResponseEntity<ResponseDTO>> updateAdditionalLabourData(@RequestBody Map<String, Object> details) {
 
-        return()->{
-             try{
-                   if(details.containsKey("labourId") && details.get("labourId") != null){
-                      CompletableFuture<ResponseDTO> res = labourService.updateAdditionalLabourData(details);
+        return () -> {
+            try {
+                if (details.containsKey("labourId") && details.get("labourId") != null) {
+                    CompletableFuture<ResponseDTO> res = labourService.updateAdditionalLabourData(details);
 
-                      return new ResponseEntity<>(res.get() , HttpStatus.OK);
-                   }else{
-                        throw new Exception("LabourId missing !!");
-                   }
+                    return new ResponseEntity<>(res.get(), HttpStatus.OK);
+                } else {
+                    throw new Exception("LabourId missing !!");
+                }
 
-             }catch(Exception ce){
-                 return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to store data : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
-             }
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to store data : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
         };
 
     }
 
+
+    @GetMapping("/getAdditionalLabourDetails/{labourId}")
+    public Callable<ResponseEntity<ResponseDTO>> getAdditionalLabourDetails(@PathVariable Integer labourId) {
+        return () -> {
+
+            try {
+                CompletableFuture<ResponseDTO> res = labourService.getAdditionalLabourDetails(labourId);
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to get data : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+
+        };
+    }
 
 
 }
