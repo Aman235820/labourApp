@@ -4,7 +4,6 @@ import com.example.labourApp.CustomExceptions.ResourceNotFoundException;
 import com.example.labourApp.Entity.sql.Labour;
 import com.example.labourApp.Entity.sql.Review;
 import com.example.labourApp.Entity.sql.Bookings;
-import com.example.labourApp.Entity.sql.User;
 import com.example.labourApp.Entity.sql.LabourSubSkill;
 import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
@@ -27,11 +26,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -363,6 +359,16 @@ public class LabourServiceImpl implements LabourService {
         return mongoDocumentService.findDocumentsByField("additionalLabourDetails", "labourId", labourId);
     }
 
+    @Async
+    public void saveProfileImagetoDB(String imageUrl, Integer labourId) {
+        Labour labour = labourRepository.findById(labourId).orElseThrow(() -> new ResourceNotFoundException("Labour", "LabourId", labourId));
+
+        labour.setProfileImage(imageUrl);
+
+        labourRepository.save(labour);
+
+    }
+
 
     private LabourDTO mapEntityToDto(Labour labour) {
         LabourDTO dto = new LabourDTO();
@@ -375,6 +381,7 @@ public class LabourServiceImpl implements LabourService {
         dto.setRatingCount(labour.getRatingCount());
         dto.setReviews(labour.getReviews());
         dto.setRegistrationTime(labour.getRegistrationTime());
+        dto.setProfileImage(labour.getProfileImage());
 
         return dto;
     }
@@ -388,6 +395,7 @@ public class LabourServiceImpl implements LabourService {
         labour.setRatingCount(dto.getRatingCount());
         labour.setReviews(dto.getReviews());
         labour.setRegistrationTime(dto.getRegistrationTime());
+        labour.setProfileImage(dto.getProfileImage());
 
         // Handle sub-skills with proper bidirectional relationship
         if (dto.getLabourSubSkills() != null && !dto.getLabourSubSkills().isEmpty()) {

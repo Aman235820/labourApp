@@ -1,5 +1,7 @@
 package com.example.labourApp.Controller;
 
+import com.cloudinary.Cloudinary;
+import com.example.labourApp.Externals.CDNService;
 import com.example.labourApp.Models.LabourDTO;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.ResponseDTO;
@@ -16,7 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -28,6 +32,10 @@ public class LabourController {
 
     @Autowired
     private LabourService labourService;
+
+    @Autowired
+    private CDNService cdnService;
+
 
     @GetMapping("/healthCheck")
     public String healthCheck() {
@@ -150,6 +158,29 @@ public class LabourController {
 
         };
     }
+
+
+    @PostMapping("/uploadImage/{labourId}")
+    public Callable<ResponseEntity<?>> uploadImage(@RequestParam("file") MultipartFile file , @PathVariable Integer labourId) {
+        return()->{
+            try {
+                if (!file.getContentType().startsWith("image/")) {
+                    throw new IllegalArgumentException("Only image uploads are allowed.");
+                }
+
+                String imageUrl = cdnService.uploadImage(file , labourId);
+
+                labourService.saveProfileImagetoDB(imageUrl , labourId);
+
+                return ResponseEntity.ok(Map.of("url", imageUrl , "labourId" , labourId));
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Upload failed: " + e.getMessage());
+            }
+        };
+    }
+
+
 
 
 }

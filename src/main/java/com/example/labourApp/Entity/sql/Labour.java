@@ -31,6 +31,8 @@ public class Labour {
 
     private String registrationTime;
 
+    private String profileImage;
+
     @OneToMany(mappedBy = "labour", cascade = CascadeType.ALL, orphanRemoval = true , fetch = FetchType.EAGER)
     private List<Review> reviews = new ArrayList<>();
 
@@ -121,6 +123,15 @@ public class Labour {
     public void setRegistrationTime(String registrationTime) {
         this.registrationTime = registrationTime;
     }
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
 
 
 }

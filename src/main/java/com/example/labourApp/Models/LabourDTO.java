@@ -37,6 +37,8 @@ public class LabourDTO implements Serializable {
 
     private List<Review> reviews;
 
+    private String profileImage;
+
     // Getter and Setter for labourId
     public Integer getLabourId() {
         return labourId;
@@ -114,6 +116,14 @@ public class LabourDTO implements Serializable {
 
     public void setRegistrationTime(String registrationTime) {
         this.registrationTime = registrationTime;
+    }
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 
 
