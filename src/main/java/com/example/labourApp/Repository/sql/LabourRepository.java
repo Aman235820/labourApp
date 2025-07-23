@@ -15,7 +15,7 @@ import java.util.Optional;
 public interface LabourRepository extends JpaRepository<Labour, Integer> {
 
     @Query("SELECT l FROM Labour l WHERE SOUNDEX(LOWER(l.labourSkill)) = SOUNDEX(LOWER(CONCAT('%', :category, '%')))")
-    Page<Labour> findByLabourSkill(@Param("category") String category , Pageable p);
+    Page<Labour> findByLabourSkill(@Param("category") String category, Pageable p);
 
     boolean existsByLabourMobileNo(String mobileNo);
 
@@ -26,6 +26,26 @@ public interface LabourRepository extends JpaRepository<Labour, Integer> {
     @Query(value = "SET FOREIGN_KEY_CHECKS = 0; TRUNCATE defaultdb.labour_sub_skill; TRUNCATE TABLE defaultdb.labour; SET FOREIGN_KEY_CHECKS = 1;", nativeQuery = true)
     void truncateLabourTable();
 
-    @Query(value = "SELECT l.* FROM defaultdb.labour AS l JOIN defaultdb.labour_sub_skill AS s ON l.labour_id = s.labour_id WHERE SOUNDEX(s.sub_skill_name) = SOUNDEX(:category) OR LOWER(s.sub_skill_name) LIKE LOWER(CONCAT('%', :category, '%'))" , nativeQuery = true)
-    Page<Labour> findByLabourSubSkill(String category, Pageable p);
+    @Query(
+            value = "SELECT l.* FROM defaultdb.labour AS l " +
+                    "JOIN defaultdb.labour_sub_skill AS s ON l.labour_id = s.labour_id " +
+                    "WHERE SOUNDEX(s.sub_skill_name) = SOUNDEX(:category) " +
+                    "OR LOWER(s.sub_skill_name) LIKE LOWER(CONCAT('%', :category, '%')) " +
+                    "ORDER BY l.rating DESC",
+
+            countQuery = "SELECT COUNT(DISTINCT l.labour_id) FROM defaultdb.labour AS l " +
+                    "JOIN defaultdb.labour_sub_skill AS s ON l.labour_id = s.labour_id " +
+                    "WHERE SOUNDEX(s.sub_skill_name) = SOUNDEX(:category) " +
+                    "OR LOWER(s.sub_skill_name) LIKE LOWER(CONCAT('%', :category, '%'))",
+
+            nativeQuery = true
+    )
+    Page<Labour> findByLabourSubSkill(@Param("category") String category, Pageable pageable);
+
+//            | Part         | Why                                                             |
+//            | ------------ | --------------------------------------------------------------- |
+//            | `countQuery` | Ensures Spring Data doesn't try to auto-generate an invalid one |
+//            | `DISTINCT`   | Avoids double-counting labours with multiple sub-skills         |
+//            | `@Param`     | Required for `:category` usage                                  |
+
 }

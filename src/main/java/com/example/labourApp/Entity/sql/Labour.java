@@ -20,7 +20,7 @@ public class Labour {
 
     private String labourSkill;
 
-    @OneToMany(mappedBy = "labour" , cascade = CascadeType.ALL , orphanRemoval = true , fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "labour", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<LabourSubSkill> labourSubSkills = new ArrayList<>();
 
     @Column(unique = true, nullable = false)
@@ -33,8 +33,17 @@ public class Labour {
 
     private String profileImage;
 
-    @OneToMany(mappedBy = "labour", cascade = CascadeType.ALL, orphanRemoval = true , fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "labour", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Review> reviews = new ArrayList<>();
+
+
+    // Newly added fields
+    private String aadhaarUrl;
+    private String labourLocation;
+
+    private String verificationStatus; // e.g., PENDING, VERIFIED, REJECTED
+    private String verifiedAt;
+    private String adminComments;
 
 
     // Getter and Setter for labourId
@@ -132,6 +141,48 @@ public class Labour {
         this.profileImage = profileImage;
     }
 
+
+    // New Fields Getters and Setters
+
+    public String getAadhaarUrl() {
+        return aadhaarUrl;
+    }
+
+    public void setAadhaarUrl(String aadhaarUrl) {
+        this.aadhaarUrl = aadhaarUrl;
+    }
+
+    public String getLabourLocation() {
+        return labourLocation;
+    }
+
+    public void setLabourLocation(String labourLocation) {
+        this.labourLocation = labourLocation;
+    }
+
+    public String getVerificationStatus() {
+        return verificationStatus;
+    }
+
+    public void setVerificationStatus(String verificationStatus) {
+        this.verificationStatus = verificationStatus;
+    }
+
+    public String getVerifiedAt() {
+        return verifiedAt;
+    }
+
+    public void setVerifiedAt(String verifiedAt) {
+        this.verifiedAt = verifiedAt;
+    }
+
+    public String getAdminComments() {
+        return adminComments;
+    }
+
+    public void setAdminComments(String adminComments) {
+        this.adminComments = adminComments;
+    }
 
 
 }

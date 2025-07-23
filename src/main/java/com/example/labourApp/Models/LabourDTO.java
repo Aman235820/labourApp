@@ -7,10 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Data
 public class LabourDTO implements Serializable {
@@ -39,7 +36,15 @@ public class LabourDTO implements Serializable {
 
     private String profileImage;
 
-    // Getter and Setter for labourId
+    // Newly added fields
+    private String aadhaarUrl;
+    private String labourLocation;
+    private String verificationStatus;
+    private String verifiedAt;
+    private String adminComments;
+
+    // Getters and Setters
+
     public Integer getLabourId() {
         return labourId;
     }
@@ -48,7 +53,6 @@ public class LabourDTO implements Serializable {
         this.labourId = labourId;
     }
 
-    // Getter and Setter for labourName
     public String getLabourName() {
         return labourName;
     }
@@ -57,25 +61,6 @@ public class LabourDTO implements Serializable {
         this.labourName = labourName;
     }
 
-    // Getter and Setter for rating
-    public String getRating() {
-        return rating;
-    }
-
-    public void setRating(String rating) {
-        this.rating = rating;
-    }
-
-    // Getter and Setter for ratingCount
-    public String getRatingCount() {
-        return ratingCount;
-    }
-
-    public void setRatingCount(String ratingCount) {
-        this.ratingCount = ratingCount;
-    }
-
-    // Getter and Setter for labourSkill
     public String getLabourSkill() {
         return labourSkill;
     }
@@ -84,7 +69,14 @@ public class LabourDTO implements Serializable {
         this.labourSkill = labourSkill;
     }
 
-    // Getter and Setter for labourMobileNo
+    public List<LabourSubSkill> getLabourSubSkills() {
+        return labourSubSkills;
+    }
+
+    public void setLabourSubSkills(List<LabourSubSkill> labourSubSkills) {
+        this.labourSubSkills = labourSubSkills;
+    }
+
     public String getLabourMobileNo() {
         return labourMobileNo;
     }
@@ -93,21 +85,28 @@ public class LabourDTO implements Serializable {
         this.labourMobileNo = labourMobileNo;
     }
 
-    // Getter and Setter for reviews
+    public String getRating() {
+        return rating;
+    }
+
+    public void setRating(String rating) {
+        this.rating = rating;
+    }
+
+    public String getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(String ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
     public List<Review> getReviews() {
         return reviews;
     }
 
     public void setReviews(List<Review> reviews) {
         this.reviews = reviews;
-    }
-
-    public List<LabourSubSkill> getLabourSubSkills() {
-        return labourSubSkills;
-    }
-
-    public void setLabourSubSkills(List<LabourSubSkill> labourSubSkills) {
-        this.labourSubSkills = labourSubSkills;
     }
 
     public String getRegistrationTime() {
@@ -126,6 +125,45 @@ public class LabourDTO implements Serializable {
         this.profileImage = profileImage;
     }
 
+    // New fields' getters and setters
 
+    public String getAadhaarUrl() {
+        return aadhaarUrl;
+    }
 
+    public void setAadhaarUrl(String aadhaarUrl) {
+        this.aadhaarUrl = aadhaarUrl;
+    }
+
+    public String getLabourLocation() {
+        return labourLocation;
+    }
+
+    public void setLabourLocation(String labourLocation) {
+        this.labourLocation = labourLocation;
+    }
+
+    public String getVerificationStatus() {
+        return verificationStatus;
+    }
+
+    public void setVerificationStatus(String verificationStatus) {
+        this.verificationStatus = verificationStatus;
+    }
+
+    public String getVerifiedAt() {
+        return verifiedAt;
+    }
+
+    public void setVerifiedAt(String verifiedAt) {
+        this.verifiedAt = verifiedAt;
+    }
+
+    public String getAdminComments() {
+        return adminComments;
+    }
+
+    public void setAdminComments(String adminComments) {
+        this.adminComments = adminComments;
+    }
 }

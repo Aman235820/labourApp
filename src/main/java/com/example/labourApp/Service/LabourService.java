@@ -37,4 +37,6 @@ public interface LabourService {
     CompletableFuture<ResponseDTO> getAdditionalLabourDetails(Integer labourId);
 
     void saveProfileImagetoDB(String imageUrl, Integer labourId);
+
+    void removeProfileImage(Integer labourId);
 }

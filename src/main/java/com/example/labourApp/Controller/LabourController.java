@@ -161,18 +161,18 @@ public class LabourController {
 
 
     @PostMapping("/uploadImage/{labourId}")
-    public Callable<ResponseEntity<?>> uploadImage(@RequestParam("file") MultipartFile file , @PathVariable Integer labourId) {
-        return()->{
+    public Callable<ResponseEntity<?>> uploadImage(@RequestParam("file") MultipartFile file, @PathVariable Integer labourId) {
+        return () -> {
             try {
                 if (!file.getContentType().startsWith("image/")) {
                     throw new IllegalArgumentException("Only image uploads are allowed.");
                 }
 
-                String imageUrl = cdnService.uploadImage(file , labourId);
+                String imageUrl = cdnService.uploadImage(file, labourId);
 
-                labourService.saveProfileImagetoDB(imageUrl , labourId);
+                labourService.saveProfileImagetoDB(imageUrl, labourId);
 
-                return ResponseEntity.ok(Map.of("url", imageUrl , "labourId" , labourId));
+                return ResponseEntity.ok(Map.of("url", imageUrl, "labourId", labourId));
             } catch (IOException e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Upload failed: " + e.getMessage());
@@ -180,7 +180,19 @@ public class LabourController {
         };
     }
 
-
+    @DeleteMapping("/deleteLabourImage/{labourId}")
+    public Callable<ResponseEntity<?>> deleteLabourImage(@PathVariable Integer labourId) {
+        return () -> {
+            try {
+                cdnService.deleteAllImagesByLabourId(labourId);
+                labourService.removeProfileImage(labourId);
+                return ResponseEntity.ok("All images deleted for labour ID: " + labourId);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Deletion failed: " + e.getMessage());
+            }
+        };
+    }
 
 
 }

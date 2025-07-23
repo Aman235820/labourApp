@@ -1,5 +1,6 @@
 package com.example.labourApp.Externals;
 
+import com.cloudinary.Api;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,4 +37,10 @@ public class CDNService {
 
         return (String) uploadResult.get("secure_url");
     }
+
+    public void deleteAllImagesByLabourId(Integer labourId) throws Exception {
+        Api api = cloudinary.api();
+        api.deleteResourcesByPrefix("labour/" + labourId, ObjectUtils.emptyMap());
+    }
+
 }

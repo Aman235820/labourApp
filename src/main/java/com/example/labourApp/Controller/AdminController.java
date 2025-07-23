@@ -7,6 +7,8 @@ import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Service.AdminService;
 import com.example.labourApp.Service.LabourService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -160,6 +162,17 @@ public class AdminController {
                 return new ResponseEntity<>(new ResponseDTO(null, true, ce.getMessage()), HttpStatus.BAD_REQUEST);
             }
         };
+    }
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @GetMapping("clearAppCache")
+    public String clearAllCaches() {
+        cacheManager.getCacheNames().forEach(name -> {
+            cacheManager.getCache(name).clear();
+        });
+        return "All caches cleared successfully!";
     }
 
 

@@ -66,6 +66,10 @@ public class AuthController {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
                     String formattedDateTime = now.format(formatter);
 
+                    //get labour location
+
+
+
                     details.setRegistrationTime(formattedDateTime);
 
                     CompletableFuture<ResponseDTO> response = labourService.registerLabour(details);

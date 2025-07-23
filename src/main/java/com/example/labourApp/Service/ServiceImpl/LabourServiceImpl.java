@@ -360,6 +360,19 @@ public class LabourServiceImpl implements LabourService {
     }
 
     @Async
+    @CacheEvict (value = "labourData", key = "#labourId")
+    public void removeProfileImage(Integer labourId) {
+
+        Labour labour = labourRepository.findById(labourId).orElseThrow(() -> new ResourceNotFoundException("Labour", "LabourId", labourId));
+
+        labour.setProfileImage(null);
+
+        labourRepository.save(labour);
+
+    }
+
+
+    @Async
     public void saveProfileImagetoDB(String imageUrl, Integer labourId) {
         Labour labour = labourRepository.findById(labourId).orElseThrow(() -> new ResourceNotFoundException("Labour", "LabourId", labourId));
 
@@ -383,6 +396,15 @@ public class LabourServiceImpl implements LabourService {
         dto.setRegistrationTime(labour.getRegistrationTime());
         dto.setProfileImage(labour.getProfileImage());
 
+
+        // Newly added fields
+        dto.setAadhaarUrl(labour.getAadhaarUrl());
+        dto.setLabourLocation(labour.getLabourLocation());
+        dto.setVerificationStatus(labour.getVerificationStatus());
+        dto.setVerifiedAt(labour.getVerifiedAt());
+        dto.setAdminComments(labour.getAdminComments());
+
+
         return dto;
     }
 
@@ -396,6 +418,14 @@ public class LabourServiceImpl implements LabourService {
         labour.setReviews(dto.getReviews());
         labour.setRegistrationTime(dto.getRegistrationTime());
         labour.setProfileImage(dto.getProfileImage());
+
+        // Newly added fields
+        labour.setAadhaarUrl(dto.getAadhaarUrl());
+        labour.setLabourLocation(dto.getLabourLocation());
+        labour.setVerificationStatus(dto.getVerificationStatus());
+        labour.setVerifiedAt(dto.getVerifiedAt());
+        labour.setAdminComments(dto.getAdminComments());
+
 
         // Handle sub-skills with proper bidirectional relationship
         if (dto.getLabourSubSkills() != null && !dto.getLabourSubSkills().isEmpty()) {
