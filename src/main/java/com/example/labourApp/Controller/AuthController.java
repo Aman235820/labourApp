@@ -8,12 +8,15 @@ import com.example.labourApp.Security.JwtHelper;
 import com.example.labourApp.Security.OtpRequestDTO;
 import com.example.labourApp.Security.OtpService;
 import com.example.labourApp.Service.LabourService;
+import com.example.labourApp.Service.OTPRateLimiterService;
 import com.example.labourApp.Service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -24,6 +27,9 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+    @Autowired
+    private OTPRateLimiterService otpRateLimiterService;
 
     @Autowired
     private LabourService labourService;
@@ -37,12 +43,30 @@ public class AuthController {
     @Autowired
     private JwtHelper jwtUtil;
 
+    @Value("${spring.otp.2FACTOR_API_KEY}")
+    String API_KEY;
+
+    @Value("${spring.otp.2FACTOR_SERVICE_ID}")
+    String SERVICE_ID;
+
 
     @PostMapping("/requestOTP")
     public Callable<ResponseEntity<?>> requestOTP(@Valid @RequestBody OtpRequestDTO req) {
         return () -> {
-            String otp = otpService.generateOtp(req.getMobile(), req.getRole());
-            return new ResponseEntity(new ResponseDTO(null, false, "OTP sent to " + req.getMobile()), HttpStatus.OK);
+            String phone = req.getMobile();
+
+            if (!otpRateLimiterService.registerRequest(phone)) {
+                return ResponseEntity.status(429).body("Too many OTP requests. Try again later.");
+            }
+
+            String url = "https://2factor.in/API/V1/" + API_KEY + "/SMS/" + phone + "/AUTOGEN/" + SERVICE_ID;
+            RestTemplate restTemplate = new RestTemplate();
+            try {
+                String response = restTemplate.getForObject(url, String.class);
+                return ResponseEntity.ok(new ResponseDTO(null, false , "OTP sent: " + response));
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body(new ResponseDTO(null,true,"Error: " + e.getMessage()));
+            }
         };
     }
 
@@ -67,8 +91,6 @@ public class AuthController {
                     String formattedDateTime = now.format(formatter);
 
                     //get labour location
-
-
 
                     details.setRegistrationTime(formattedDateTime);
 
