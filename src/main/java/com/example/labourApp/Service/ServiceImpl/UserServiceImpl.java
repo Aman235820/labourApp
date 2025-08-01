@@ -119,6 +119,12 @@ public class UserServiceImpl implements UserService {
             book.setLabourMobileNo(labour.getLabourMobileNo());
             book.setBookingTime(bookingDetails.getBookingTime());
 
+            book.setPreferredDate(bookingDetails.getPreferredDate());
+            book.setPreferredTime(bookingDetails.getPreferredTime());
+            book.setWorkDescription(bookingDetails.getWorkDescription());
+            book.setUrgencyLevel(bookingDetails.getUrgencyLevel());
+
+
 //            booking status code :
 //            1 : Confirmation pending at labour's end
 //            2 : Booking accepted

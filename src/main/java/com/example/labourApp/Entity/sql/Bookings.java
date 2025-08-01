@@ -28,6 +28,13 @@ public class Bookings {
 
     private Integer bookingStatusCode;
 
+
+    private String preferredDate;
+    private String preferredTime;
+    private String workDescription;
+    private String urgencyLevel;
+
+
     public Integer getBookingStatusCode() {
         return bookingStatusCode;
     }
@@ -109,4 +116,39 @@ public class Bookings {
     public void setLabourName(String labourName) {
         this.labourName = labourName;
     }
+
+
+    public String getPreferredDate() {
+        return preferredDate;
+    }
+
+    public void setPreferredDate(String preferredDate) {
+        this.preferredDate = preferredDate;
+    }
+
+    public String getPreferredTime() {
+        return preferredTime;
+    }
+
+    public void setPreferredTime(String preferredTime) {
+        this.preferredTime = preferredTime;
+    }
+
+    public String getWorkDescription() {
+        return workDescription;
+    }
+
+    public void setWorkDescription(String workDescription) {
+        this.workDescription = workDescription;
+    }
+
+    public String getUrgencyLevel() {
+        return urgencyLevel;
+    }
+
+    public void setUrgencyLevel(String urgencyLevel) {
+        this.urgencyLevel = urgencyLevel;
+    }
+
+
 }

@@ -1,6 +1,7 @@
 package com.example.labourApp.Models;
 
 import java.time.LocalDateTime;
+
 import lombok.Data;
 
 @Data
@@ -15,6 +16,11 @@ public class BookingDTO {
     private String labourName;
     private Integer bookingStatusCode;
 
+    private String preferredDate;
+    private String preferredTime;
+    private String workDescription;
+    private String urgencyLevel;
+
 
     public Integer getBookingStatusCode() {
         return bookingStatusCode;
@@ -23,7 +29,6 @@ public class BookingDTO {
     public void setBookingStatusCode(Integer bookingStatusCode) {
         this.bookingStatusCode = bookingStatusCode;
     }
-
 
 
     // Getters
@@ -91,4 +96,39 @@ public class BookingDTO {
     public void setLabourName(String labourName) {
         this.labourName = labourName;
     }
+
+
+    public String getPreferredDate() {
+        return preferredDate;
+    }
+
+    public void setPreferredDate(String preferredDate) {
+        this.preferredDate = preferredDate;
+    }
+
+    public String getPreferredTime() {
+        return preferredTime;
+    }
+
+    public void setPreferredTime(String preferredTime) {
+        this.preferredTime = preferredTime;
+    }
+
+    public String getWorkDescription() {
+        return workDescription;
+    }
+
+    public void setWorkDescription(String workDescription) {
+        this.workDescription = workDescription;
+    }
+
+    public String getUrgencyLevel() {
+        return urgencyLevel;
+    }
+
+    public void setUrgencyLevel(String urgencyLevel) {
+        this.urgencyLevel = urgencyLevel;
+    }
+
+
 }
