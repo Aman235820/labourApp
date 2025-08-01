@@ -129,8 +129,9 @@ public class LabourController {
 
         return () -> {
             try {
-                if (details.containsKey("labourId") && details.get("labourId") != null) {
-                    CompletableFuture<ResponseDTO> res = labourService.updateAdditionalLabourData(details);
+                    Object labourId = details.get("labourId");
+                if (details.containsKey("labourId") && labourId != null) {
+                    CompletableFuture<ResponseDTO> res = labourService.updateAdditionalLabourData(details , (int)labourId);
 
                     return new ResponseEntity<>(res.get(), HttpStatus.OK);
                 } else {

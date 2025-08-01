@@ -332,10 +332,11 @@ public class LabourServiceImpl implements LabourService {
     }
 
     @Async
-    public CompletableFuture<ResponseDTO> updateAdditionalLabourData(Map<String, Object> details) {
+    @CacheEvict (value = "labourData", key = "#labourId")
+    public CompletableFuture<ResponseDTO> updateAdditionalLabourData(Map<String, Object> details, int labourId) {
 
         try {
-            CompletableFuture<ResponseDTO> res = mongoDocumentService.findDocumentsByField("additionalLabourDetails", "labourId", details.get("labourId"));
+            CompletableFuture<ResponseDTO> res = mongoDocumentService.findDocumentsByField("additionalLabourDetails", "labourId", labourId);
 
             List<Map<String, Object>> labDetails = (List<Map<String, Object>>) res.get().returnValue;
 
