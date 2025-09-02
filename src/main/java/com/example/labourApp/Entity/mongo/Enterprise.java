@@ -1,39 +1,57 @@
-package com.example.labourApp.Models;
-
+package com.example.labourApp.Entity.mongo;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public class EnterpriseDTO implements Serializable {
+@Document("enterprise")
+public class Enterprise implements Serializable {
 
+    @Id
     private String id;
+
     private String ownername;
 
     @NotEmpty
-    @Pattern(regexp = "^[0-9]+$", message = "Owner contact info must contain only numbers")
+    @Indexed(unique = true)
     private String ownerContactInfo;
 
     @NotEmpty
     private String companyName;
+
     private String gstNumber;
+
     private List<String> otherContactNumbers;
+
     private String registrationCertificateLink;
+
     private Integer workforceSize;
 
     @NotEmpty
-    private Map<String,Object> servicesOffered;
+    @Indexed
+    private Map<String, Object> servicesOffered;
 
-    private Map<String,Object> otherDocumentLinks;
+    private Map<String, Object> otherDocumentLinks;
+
     private String rating;
+
     private String ratingCount;
+
     private String location;
+
     private String verificationStatus;
+
     private String verifiedAt;
+
     private String adminComments;
+
+    // Default constructor
+    public Enterprise() {}
 
     // Getters and Setters
     public String getId() {
@@ -104,15 +122,15 @@ public class EnterpriseDTO implements Serializable {
         return servicesOffered;
     }
 
-    public void setServicesOffered(Map<String , Object> servicesOffered) {
+    public void setServicesOffered(Map<String, Object> servicesOffered) {
         this.servicesOffered = servicesOffered;
     }
 
-    public Map<String,Object> getOtherDocumentLinks() {
+    public Map<String, Object> getOtherDocumentLinks() {
         return otherDocumentLinks;
     }
 
-    public void setOtherDocumentLinks(Map<String,Object> otherDocumentLinks) {
+    public void setOtherDocumentLinks(Map<String, Object> otherDocumentLinks) {
         this.otherDocumentLinks = otherDocumentLinks;
     }
 

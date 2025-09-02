@@ -5,6 +5,7 @@ import com.example.labourApp.Models.EnterpriseDTO;
 import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Service.EnterpriseService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,26 +24,24 @@ public class EnterpriseController {
     @Autowired
     EnterpriseService enterpriseService;
 
+    @PostMapping("/registerEnterprise")
+    public Callable<ResponseEntity<ResponseDTO>> registerEnterprise(
+            @Valid @RequestBody EnterpriseDTO enterprise
+    ) {
+        return () -> {
+            try {
 
-      @PostMapping("/registerEnterprise")
-      public Callable<ResponseEntity<ResponseDTO>> registerEnterprise(
-              @RequestBody EnterpriseDTO enterprise
-      ){
-          return()->{
-              try {
+                CompletableFuture<ResponseDTO> response = enterpriseService.registerEnterprise(enterprise);
 
-                  CompletableFuture<ResponseDTO> response = enterpriseService.registerEnterprise(enterprise);
+                return new ResponseEntity<>(response.get(), HttpStatus.OK);
 
-                  return new ResponseEntity<>(response.get(), HttpStatus.OK);
-
-              } catch (Exception ce) {
-                  return new ResponseEntity<>(new ResponseDTO(null,true,"Registration failed : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
-              }
-          };
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Registration failed : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
 
 
-      }
-
+    }
 
 
 }
