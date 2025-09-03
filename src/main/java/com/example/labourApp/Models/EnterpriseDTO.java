@@ -35,6 +35,8 @@ public class EnterpriseDTO implements Serializable {
     private String verifiedAt;
     private String adminComments;
 
+    private String registrationTime;
+
     // Getters and Setters
     public String getId() {
         return id;
@@ -162,5 +164,13 @@ public class EnterpriseDTO implements Serializable {
 
     public void setAdminComments(String adminComments) {
         this.adminComments = adminComments;
+    }
+
+    public String getRegistrationTime() {
+        return registrationTime;
+    }
+
+    public void setRegistrationTime(String registrationTime) {
+        this.registrationTime = registrationTime;
     }
 }

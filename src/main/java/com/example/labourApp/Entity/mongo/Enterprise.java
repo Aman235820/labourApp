@@ -50,6 +50,9 @@ public class Enterprise implements Serializable {
 
     private String adminComments;
 
+    private String registrationTime;
+
+
     // Default constructor
     public Enterprise() {}
 
@@ -181,4 +184,13 @@ public class Enterprise implements Serializable {
     public void setAdminComments(String adminComments) {
         this.adminComments = adminComments;
     }
+
+    public String getRegistrationTime() {
+        return registrationTime;
+    }
+
+    public void setRegistrationTime(String registrationTime) {
+        this.registrationTime = registrationTime;
+    }
+
 }

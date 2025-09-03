@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
@@ -31,6 +33,13 @@ public class EnterpriseController {
         return () -> {
             try {
 
+                // Get current date and time
+                LocalDateTime now = LocalDateTime.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+                String formattedDateTime = now.format(formatter);
+
+                enterprise.setRegistrationTime(formattedDateTime);
+
                 CompletableFuture<ResponseDTO> response = enterpriseService.registerEnterprise(enterprise);
 
                 return new ResponseEntity<>(response.get(), HttpStatus.OK);
@@ -41,6 +50,24 @@ public class EnterpriseController {
         };
 
 
+    }
+
+
+    @PostMapping("/enterpriseLogin")
+    public Callable<ResponseEntity<ResponseDTO>> enterpriseLogin(
+            @Valid @RequestBody EnterpriseDTO enterprise
+    ) {
+        return () -> {
+            try {
+
+                CompletableFuture<ResponseDTO> response = enterpriseService.enterpriseLogin(enterprise);
+
+                return new ResponseEntity<>(response.get(), HttpStatus.OK);
+
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Registration failed : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
     }
 
 

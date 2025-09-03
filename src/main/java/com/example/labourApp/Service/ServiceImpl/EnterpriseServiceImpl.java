@@ -2,6 +2,7 @@ package com.example.labourApp.Service.ServiceImpl;
 
 
 import com.example.labourApp.Entity.mongo.Enterprise;
+import com.example.labourApp.Entity.sql.Labour;
 import com.example.labourApp.Models.EnterpriseDTO;
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Repository.mongo.EnterpriseRepository;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -36,6 +38,16 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 
     }
 
+    public CompletableFuture<ResponseDTO> enterpriseLogin(String mobileNumber){
+        Optional<Labour> l = enterpriseRepository.findByownerContactInfo(mobileNumber);
+        if (l.isPresent()) {
+            return CompletableFuture.completedFuture(new ResponseDTO(l.get(), false, "Successfully Fetched labour !!"));
+        }
+
+        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Didn't find any labour with this mobile number !!"));
+
+    }
+
     private Enterprise mapDtoToEntity(EnterpriseDTO dto) {
         Enterprise enterprise = new Enterprise();
         enterprise.setOwnername(dto.getOwnername());
@@ -53,7 +65,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         enterprise.setVerificationStatus(dto.getVerificationStatus());
         enterprise.setVerifiedAt(dto.getVerifiedAt());
         enterprise.setAdminComments(dto.getAdminComments());
-        
+        enterprise.setRegistrationTime(dto.getRegistrationTime());
         return enterprise;
     }
 
@@ -75,7 +87,8 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         dto.setVerificationStatus(enterprise.getVerificationStatus());
         dto.setVerifiedAt(enterprise.getVerifiedAt());
         dto.setAdminComments(enterprise.getAdminComments());
-        
+        dto.setRegistrationTime(enterprise.getRegistrationTime());
+
         return dto;
     }
 
