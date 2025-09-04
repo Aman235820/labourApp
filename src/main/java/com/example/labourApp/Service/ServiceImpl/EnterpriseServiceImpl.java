@@ -2,11 +2,11 @@ package com.example.labourApp.Service.ServiceImpl;
 
 
 import com.example.labourApp.Entity.mongo.Enterprise;
-import com.example.labourApp.Entity.sql.Labour;
 import com.example.labourApp.Models.EnterpriseDTO;
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Repository.mongo.EnterpriseRepository;
 import com.example.labourApp.Service.EnterpriseService;
+import com.example.labourApp.Service.MongoDocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -15,10 +15,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
-public class EnterpriseServiceImpl implements EnterpriseService {
+public  class EnterpriseServiceImpl implements EnterpriseService {
 
     @Autowired
     EnterpriseRepository enterpriseRepository;
+
+    @Autowired
+    MongoDocumentService mongoDocumentService;
 
 
     @Async
@@ -32,20 +35,37 @@ public class EnterpriseServiceImpl implements EnterpriseService {
             return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Mobile Number already registered, try different !!"));
         }
 
+        // Check if GST number already exists (if provided)
+        if (details.getGstNumber() != null && !details.getGstNumber().trim().isEmpty()) {
+            boolean gstExists = enterpriseRepository.existsByGstNumber(details.getGstNumber());
+            if (gstExists) {
+                return CompletableFuture.completedFuture(new ResponseDTO(null, true, "GST Number already registered, try different !!"));
+            }
+        }
+
         Enterprise enterprise = mapDtoToEntity(details);
-        enterpriseRepository.save(enterprise);
-        return CompletableFuture.completedFuture(new ResponseDTO(enterprise, false, "Successfully Registered !!"));
+        // Set default values for registration
+        enterprise.setVerificationStatus("PENDING");
+        enterprise.setRating("0.0");
+        enterprise.setRatingCount("0");
+        
+        Enterprise savedEnterprise = enterpriseRepository.save(enterprise);
+        EnterpriseDTO responseDTO = mapEntityToDto(savedEnterprise);
+        
+        return CompletableFuture.completedFuture(new ResponseDTO(responseDTO, false, "Successfully Registered !!"));
 
     }
 
+    @Async
     public CompletableFuture<ResponseDTO> enterpriseLogin(String mobileNumber){
-        Optional<Labour> l = enterpriseRepository.findByownerContactInfo(mobileNumber);
-        if (l.isPresent()) {
-            return CompletableFuture.completedFuture(new ResponseDTO(l.get(), false, "Successfully Fetched labour !!"));
+        Optional<Enterprise> e = enterpriseRepository.findByOwnerContactInfo(mobileNumber);
+        if (e.isPresent()) {
+            Enterprise enterprise = e.get();
+            EnterpriseDTO enterpriseDTO = mapEntityToDto(enterprise);
+            return CompletableFuture.completedFuture(new ResponseDTO(enterpriseDTO, false, "Successfully Fetched enterprise !!"));
         }
 
-        return CompletableFuture.completedFuture(new ResponseDTO(null, false, "Didn't find any labour with this mobile number !!"));
-
+        return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Didn't find any enterprise with this mobile number !!"));
     }
 
     private Enterprise mapDtoToEntity(EnterpriseDTO dto) {

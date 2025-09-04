@@ -8,5 +8,5 @@ import java.util.concurrent.CompletableFuture;
 public interface EnterpriseService {
     CompletableFuture<ResponseDTO> registerEnterprise(EnterpriseDTO enterprise);
 
-    CompletableFuture<ResponseDTO> enterpriseLogin(EnterpriseDTO enterprise);
+    CompletableFuture<ResponseDTO> enterpriseLogin(String mobileNumber);
 }
