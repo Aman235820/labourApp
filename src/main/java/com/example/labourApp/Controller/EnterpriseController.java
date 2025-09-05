@@ -99,5 +99,20 @@ public class EnterpriseController {
         };
     }
 
+    @PatchMapping("/updateEnterpriseField/{id}")
+    public Callable<ResponseEntity<ResponseDTO>> updateEnterpriseField(@PathVariable String  id , @RequestBody Map<String,Object> updatedField) {
+        return () -> {
+
+            try {
+                CompletableFuture<ResponseDTO> res = enterpriseService.updateEnterpriseField(id,updatedField);
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to update data : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+
+        };
+    }
+
+
 
 }

@@ -11,11 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
-public  class EnterpriseServiceImpl implements EnterpriseService {
+public class EnterpriseServiceImpl implements EnterpriseService {
 
     @Autowired
     EnterpriseRepository enterpriseRepository;
@@ -25,7 +27,7 @@ public  class EnterpriseServiceImpl implements EnterpriseService {
 
 
     @Async
-    public CompletableFuture<ResponseDTO> registerEnterprise(EnterpriseDTO details){
+    public CompletableFuture<ResponseDTO> registerEnterprise(EnterpriseDTO details) {
 
         String mobileNo = details.getOwnerContactInfo();
 
@@ -48,16 +50,16 @@ public  class EnterpriseServiceImpl implements EnterpriseService {
         enterprise.setVerificationStatus("PENDING");
         enterprise.setRating("0.0");
         enterprise.setRatingCount("0");
-        
+
         Enterprise savedEnterprise = enterpriseRepository.save(enterprise);
         EnterpriseDTO responseDTO = mapEntityToDto(savedEnterprise);
-        
+
         return CompletableFuture.completedFuture(new ResponseDTO(responseDTO, false, "Successfully Registered !!"));
 
     }
 
     @Async
-    public CompletableFuture<ResponseDTO> enterpriseLogin(String mobileNumber){
+    public CompletableFuture<ResponseDTO> enterpriseLogin(String mobileNumber) {
         Optional<Enterprise> e = enterpriseRepository.findByOwnerContactInfo(mobileNumber);
         if (e.isPresent()) {
             Enterprise enterprise = e.get();
@@ -67,6 +69,34 @@ public  class EnterpriseServiceImpl implements EnterpriseService {
 
         return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Didn't find any enterprise with this mobile number !!"));
     }
+
+
+    @Async
+    public CompletableFuture<ResponseDTO> updateEnterpriseField(String id, Map<String, Object> updatedField) {
+        try {
+            // Call the generic mongo service to perform the update
+            CompletableFuture<ResponseDTO> updateResult = mongoDocumentService.updateDocument("enterprise", id, updatedField);
+            ResponseDTO result = updateResult.get();
+            
+            if (!result.getHasError()) {
+                // Create response with only updated fields
+                Map<String, Object> responseData = new HashMap<>(updatedField);
+                responseData.put("id", id);
+                responseData.put("updatedAt", System.currentTimeMillis());
+                
+                return CompletableFuture.completedFuture(
+                    new ResponseDTO(responseData, false, "Enterprise data updated successfully!")
+                );
+            } else {
+                return CompletableFuture.completedFuture(result);
+            }
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(
+                new ResponseDTO(null, true, "Failed to update enterprise: " + e.getMessage())
+            );
+        }
+    }
+
 
     private Enterprise mapDtoToEntity(EnterpriseDTO dto) {
         Enterprise enterprise = new Enterprise();
