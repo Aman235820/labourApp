@@ -113,6 +113,19 @@ public class EnterpriseController {
         };
     }
 
+    @GetMapping("findEnterpriseById/{enterpriseId}")
+    public Callable<ResponseEntity<ResponseDTO>> findEnterpriseById(@PathVariable String enterpriseId){
+        return () -> {
+            try {
+                CompletableFuture<ResponseDTO> res = enterpriseService.findEnterpriseById(enterpriseId);
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to get data : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
+    }
+
+
 
 
 }

@@ -12,4 +12,6 @@ public interface EnterpriseService {
     CompletableFuture<ResponseDTO> enterpriseLogin(String mobileNumber);
 
     CompletableFuture<ResponseDTO> updateEnterpriseField(String id, Map<String, Object> updatedField);
+
+    CompletableFuture<ResponseDTO> findEnterpriseById(String enterpriseId);
 }

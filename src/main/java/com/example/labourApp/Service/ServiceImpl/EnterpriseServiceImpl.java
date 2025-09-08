@@ -97,6 +97,11 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         }
     }
 
+    @Async
+    public  CompletableFuture<ResponseDTO> findEnterpriseById(String enterpriseId){
+          return mongoDocumentService.findDocumentById("enterprise",enterpriseId);
+    }
+
 
     private Enterprise mapDtoToEntity(EnterpriseDTO dto) {
         Enterprise enterprise = new Enterprise();
