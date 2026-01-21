@@ -49,7 +49,7 @@ public class LabourServiceImpl implements LabourService {
     @Autowired
     UserRepository userRepository;
 
-    @Autowired
+    @Autowired(required = false)
     MongoDocumentService mongoDocumentService;
 
     @Async
@@ -335,6 +335,10 @@ public class LabourServiceImpl implements LabourService {
     @CacheEvict (value = "labourData", key = "#labourId")
     public CompletableFuture<ResponseDTO> updateAdditionalLabourData(Map<String, Object> details, int labourId) {
 
+        if (mongoDocumentService == null) {
+            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "MongoDB service is not available in this environment"));
+        }
+
         try {
             CompletableFuture<ResponseDTO> res = mongoDocumentService.findDocumentsByField("additionalLabourDetails", "labourId", labourId);
 
@@ -357,6 +361,9 @@ public class LabourServiceImpl implements LabourService {
 
     @Async
     public CompletableFuture<ResponseDTO> getAdditionalLabourDetails(Integer labourId) {
+        if (mongoDocumentService == null) {
+            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "MongoDB service is not available in this environment"));
+        }
         return mongoDocumentService.findDocumentsByField("additionalLabourDetails", "labourId", labourId);
     }
 

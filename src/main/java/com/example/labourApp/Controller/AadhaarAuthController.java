@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/aadhaar")
 class AadhaarAuthController {
 
-    @Autowired
+    @Autowired(required = false)
     MongoDocumentService mongoDocumentService;
 
     @PostMapping("/verifyAadhaar")
@@ -55,6 +55,10 @@ class AadhaarAuthController {
         return () -> {
 
             try {
+                if (mongoDocumentService == null) {
+                    return new ResponseEntity<>(new ResponseDTO(null, true, "MongoDB service is not available in this environment"), HttpStatus.SERVICE_UNAVAILABLE);
+                }
+                
                 details.put("labourId" , labourId);
 
                 CompletableFuture<ResponseDTO> res = mongoDocumentService.createMongoDocument("labourAadhaarDetails" , details);

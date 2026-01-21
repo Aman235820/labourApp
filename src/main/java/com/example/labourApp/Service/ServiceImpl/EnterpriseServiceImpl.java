@@ -8,6 +8,7 @@ import com.example.labourApp.Repository.mongo.EnterpriseRepository;
 import com.example.labourApp.Service.EnterpriseService;
 import com.example.labourApp.Service.MongoDocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
+@ConditionalOnProperty(name = "spring.data.mongodb.uri", matchIfMissing = false)
 public class EnterpriseServiceImpl implements EnterpriseService {
 
     @Autowired

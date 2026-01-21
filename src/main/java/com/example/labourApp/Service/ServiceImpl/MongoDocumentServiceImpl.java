@@ -11,6 +11,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Service
+@ConditionalOnProperty(name = "spring.data.mongodb.uri", matchIfMissing = false)
 public class MongoDocumentServiceImpl implements MongoDocumentService {
 
     @Autowired

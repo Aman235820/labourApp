@@ -8,6 +8,7 @@ import com.example.labourApp.Security.OtpService;
 import com.example.labourApp.Service.EnterpriseService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/enterprise")
+@ConditionalOnProperty(name = "spring.data.mongodb.uri", matchIfMissing = false)
 public class EnterpriseController {
 
     @Autowired
