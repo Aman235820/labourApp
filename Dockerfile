@@ -6,7 +6,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # -------- Run Stage --------
-FROM openjdk:17-jdk-alpine
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/labourApp-0.0.1-SNAPSHOT.jar labourappdocker.jar
 EXPOSE 8080
