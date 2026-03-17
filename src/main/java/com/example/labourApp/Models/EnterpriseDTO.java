@@ -1,8 +1,11 @@
 package com.example.labourApp.Models;
 
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.Length;
 
 import java.io.Serializable;
 import java.util.List;
@@ -19,9 +22,13 @@ public class EnterpriseDTO implements Serializable {
 
     @NotEmpty
     private String companyName;
+
+    @Size( min =  15 , max = 15 , message = "GST number must be exactly 15 characters")
     private String gstNumber;
     private List<String> otherContactNumbers;
     private String registrationCertificateLink;
+
+
     private Integer workforceSize;
 
     @NotEmpty
