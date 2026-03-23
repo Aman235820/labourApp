@@ -7,8 +7,10 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.language.DoubleMetaphone;
+import org.apache.commons.codec.language.Soundex;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,15 +19,22 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
 @Service
 @ConditionalOnProperty(name = "spring.data.mongodb.uri", matchIfMissing = false)
 public class MongoDocumentServiceImpl implements MongoDocumentService {
+
+    private static final Soundex SOUNDEX = new Soundex();
+    private static final DoubleMetaphone DOUBLE_METAPHONE = new DoubleMetaphone();
+    private static final Pattern NON_WORD = Pattern.compile("[^\\p{L}\\p{N}]+");
 
     @Autowired
     private MongoClient mongoClient;
@@ -259,27 +268,122 @@ public class MongoDocumentServiceImpl implements MongoDocumentService {
         }
     }
 
-    private static Document mapFieldObjectToArrayExpr(String fieldName) {
-        return new Document("$objectToArray",
-                new Document("$ifNull", Arrays.asList("$" + fieldName, new Document())));
+    /**
+     * Collects every category name and sub-service string plus word tokens for phonetic match.
+     */
+    private static void flattenServicesOffered(Object node, Set<String> fullStrings, Set<String> wordTokens) {
+        if (node == null) {
+            return;
+        }
+        if (node instanceof String s) {
+            String t = s.trim();
+            if (!t.isEmpty()) {
+                fullStrings.add(t);
+                addTokens(t.toLowerCase(Locale.ROOT), wordTokens);
+            }
+            return;
+        }
+        if (node instanceof List<?> list) {
+            for (Object o : list) {
+                flattenServicesOffered(o, fullStrings, wordTokens);
+            }
+            return;
+        }
+        if (node instanceof Map<?, ?> map) {
+            for (Map.Entry<?, ?> e : map.entrySet()) {
+                if (e.getKey() != null) {
+                    String k = e.getKey().toString().trim();
+                    if (!k.isEmpty()) {
+                        fullStrings.add(k);
+                        addTokens(k.toLowerCase(Locale.ROOT), wordTokens);
+                    }
+                }
+                flattenServicesOffered(e.getValue(), fullStrings, wordTokens);
+            }
+            return;
+        }
+        if (node instanceof Document doc) {
+            for (String key : doc.keySet()) {
+                String k = key.trim();
+                if (!k.isEmpty()) {
+                    fullStrings.add(k);
+                    addTokens(k.toLowerCase(Locale.ROOT), wordTokens);
+                }
+                flattenServicesOffered(doc.get(key), fullStrings, wordTokens);
+            }
+        }
     }
 
-    private static Bson exprServiceCategoryKeyEquals(String fieldName, String searchTerm) {
-        Document filtered = new Document("$filter", new Document()
-                .append("input", mapFieldObjectToArrayExpr(fieldName))
-                .append("as", "pair")
-                .append("cond", new Document("$eq", Arrays.asList("$$pair.k", searchTerm))));
-        return Filters.expr(new Document("$gt", Arrays.asList(new Document("$size", filtered), 0)));
+    private static void addTokens(String lowerText, Set<String> wordTokens) {
+        for (String w : NON_WORD.split(lowerText)) {
+            if (!w.isEmpty()) {
+                wordTokens.add(w);
+            }
+        }
     }
 
-    private static Bson exprSubServiceInAnyCategory(String fieldName, String searchTerm) {
-        Document filtered = new Document("$filter", new Document()
-                .append("input", mapFieldObjectToArrayExpr(fieldName))
-                .append("as", "pair")
-                .append("cond", new Document("$and", Arrays.asList(
-                        new Document("$isArray", "$$pair.v"),
-                        new Document("$in", Arrays.asList(searchTerm, "$$pair.v"))))));
-        return Filters.expr(new Document("$gt", Arrays.asList(new Document("$size", filtered), 0)));
+    private static String soundexOrEmpty(String word) {
+        if (word == null || word.length() < 2) {
+            return "";
+        }
+        return SOUNDEX.soundex(word);
+    }
+
+    /** Soundex (aligned with SQL-style phonetic match) plus Double Metaphone for close variants (e.g. z/s). */
+    private static boolean phoneticWordMatch(String queryWord, String corpusWord) {
+        if (queryWord.length() < 2 || corpusWord.length() < 2) {
+            return false;
+        }
+        String q = soundexOrEmpty(queryWord);
+        if (!q.isEmpty() && q.equals(soundexOrEmpty(corpusWord))) {
+            return true;
+        }
+        return DOUBLE_METAPHONE.isDoubleMetaphoneEqual(queryWord, corpusWord, false);
+    }
+
+    /**
+     * Case-insensitive substring on full labels, plus Soundex match on any word (e.g. {@code gizar} ~ {@code Geyser}).
+     */
+    private static boolean servicesOfferedMatchesSearch(Object servicesOffered, String rawSearch) {
+        if (servicesOffered == null || rawSearch == null) {
+            return false;
+        }
+        String needle = rawSearch.trim().toLowerCase(Locale.ROOT);
+        if (needle.isEmpty()) {
+            return false;
+        }
+
+        Set<String> fullStrings = new LinkedHashSet<>();
+        Set<String> corpusWords = new LinkedHashSet<>();
+        flattenServicesOffered(servicesOffered, fullStrings, corpusWords);
+
+        for (String fs : fullStrings) {
+            if (fs.toLowerCase(Locale.ROOT).contains(needle)) {
+                return true;
+            }
+        }
+
+        List<String> queryWords = new ArrayList<>();
+        for (String w : NON_WORD.split(needle)) {
+            if (!w.isEmpty()) {
+                queryWords.add(w);
+            }
+        }
+        if (queryWords.isEmpty()) {
+            return false;
+        }
+
+        for (String qw : queryWords) {
+            if (qw.length() < 2) {
+                continue;
+            }
+            for (String cw : corpusWords) {
+                if (phoneticWordMatch(qw, cw)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static List<Map<String, Object>> documentsToMapsWithStringIds(List<Document> documents) {
@@ -308,19 +412,22 @@ public class MongoDocumentServiceImpl implements MongoDocumentService {
             }
             String mapField = fieldName.trim();
             String term = searchTerm.trim();
-            List<Document> documents = new ArrayList<>();
-            getCollection(collectionName).find(exprServiceCategoryKeyEquals(mapField, term)).into(documents);
+            List<Document> candidates = new ArrayList<>();
+            getCollection(collectionName)
+                    .find(Filters.and(Filters.exists(mapField), Filters.ne(mapField, null)))
+                    .into(candidates);
 
-            String matchKind = "service category";
-            if (documents.isEmpty()) {
-                getCollection(collectionName).find(exprSubServiceInAnyCategory(mapField, term)).into(documents);
-                matchKind = "sub-service";
+            List<Document> documents = new ArrayList<>();
+            for (Document doc : candidates) {
+                if (servicesOfferedMatchesSearch(doc.get(mapField), term)) {
+                    documents.add(doc);
+                }
             }
 
             List<Map<String, Object>> resultList = documentsToMapsWithStringIds(documents);
             String message = resultList.isEmpty()
-                    ? "No documents matched this service or sub-service"
-                    : "Documents found by " + matchKind + ": " + resultList.size();
+                    ? "No documents matched this service or sub-service (substring / phonetic)"
+                    : "Documents matched (substring or phonetic): " + resultList.size();
 
             return CompletableFuture.completedFuture(new ResponseDTO(resultList, false, message));
         } catch (Exception e) {
