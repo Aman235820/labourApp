@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -254,6 +256,76 @@ public class MongoDocumentServiceImpl implements MongoDocumentService {
             return CompletableFuture.completedFuture(
                     new ResponseDTO(null, true, "Failed to remove field: " + e.getMessage())
             );
+        }
+    }
+
+    private static Document mapFieldObjectToArrayExpr(String fieldName) {
+        return new Document("$objectToArray",
+                new Document("$ifNull", Arrays.asList("$" + fieldName, new Document())));
+    }
+
+    private static Bson exprServiceCategoryKeyEquals(String fieldName, String searchTerm) {
+        Document filtered = new Document("$filter", new Document()
+                .append("input", mapFieldObjectToArrayExpr(fieldName))
+                .append("as", "pair")
+                .append("cond", new Document("$eq", Arrays.asList("$$pair.k", searchTerm))));
+        return Filters.expr(new Document("$gt", Arrays.asList(new Document("$size", filtered), 0)));
+    }
+
+    private static Bson exprSubServiceInAnyCategory(String fieldName, String searchTerm) {
+        Document filtered = new Document("$filter", new Document()
+                .append("input", mapFieldObjectToArrayExpr(fieldName))
+                .append("as", "pair")
+                .append("cond", new Document("$and", Arrays.asList(
+                        new Document("$isArray", "$$pair.v"),
+                        new Document("$in", Arrays.asList(searchTerm, "$$pair.v"))))));
+        return Filters.expr(new Document("$gt", Arrays.asList(new Document("$size", filtered), 0)));
+    }
+
+    private static List<Map<String, Object>> documentsToMapsWithStringIds(List<Document> documents) {
+        List<Map<String, Object>> resultList = new ArrayList<>();
+        for (Document doc : documents) {
+            Map<String, Object> map = new HashMap<>(doc);
+            if (doc.getObjectId("_id") != null) {
+                map.put("_id", doc.getObjectId("_id").toHexString());
+            }
+            resultList.add(map);
+        }
+        return resultList;
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<ResponseDTO> findDocumentsByServicesOffered(String collectionName, String fieldName, String searchTerm) {
+        try {
+            if (fieldName == null || fieldName.trim().isEmpty()) {
+                return CompletableFuture.completedFuture(
+                        new ResponseDTO(new ArrayList<>(), false, "No field name provided"));
+            }
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return CompletableFuture.completedFuture(
+                        new ResponseDTO(new ArrayList<>(), false, "No search term provided"));
+            }
+            String mapField = fieldName.trim();
+            String term = searchTerm.trim();
+            List<Document> documents = new ArrayList<>();
+            getCollection(collectionName).find(exprServiceCategoryKeyEquals(mapField, term)).into(documents);
+
+            String matchKind = "service category";
+            if (documents.isEmpty()) {
+                getCollection(collectionName).find(exprSubServiceInAnyCategory(mapField, term)).into(documents);
+                matchKind = "sub-service";
+            }
+
+            List<Map<String, Object>> resultList = documentsToMapsWithStringIds(documents);
+            String message = resultList.isEmpty()
+                    ? "No documents matched this service or sub-service"
+                    : "Documents found by " + matchKind + ": " + resultList.size();
+
+            return CompletableFuture.completedFuture(new ResponseDTO(resultList, false, message));
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(
+                    new ResponseDTO(null, true, "Failed to find documents by services offered: " + e.getMessage()));
         }
     }
 } 

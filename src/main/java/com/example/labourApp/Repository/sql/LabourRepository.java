@@ -26,19 +26,14 @@ public interface LabourRepository extends JpaRepository<Labour, Integer> {
     @Query(value = "SET FOREIGN_KEY_CHECKS = 0; TRUNCATE defaultdb.labour_sub_skill; TRUNCATE TABLE defaultdb.labour; SET FOREIGN_KEY_CHECKS = 1;", nativeQuery = true)
     void truncateLabourTable();
 
+    /** JPQL (no hardcoded schema) so H2 dev and MySQL prod both work; sort comes from {@code Pageable}. */
     @Query(
-            value = "SELECT l.* FROM defaultdb.labour AS l " +
-                    "JOIN defaultdb.labour_sub_skill AS s ON l.labour_id = s.labour_id " +
-                    "WHERE SOUNDEX(s.sub_skill_name) = SOUNDEX(:category) " +
-                    "OR LOWER(s.sub_skill_name) LIKE LOWER(CONCAT('%', :category, '%')) " +
-                    "ORDER BY l.rating DESC",
-
-            countQuery = "SELECT COUNT(DISTINCT l.labour_id) FROM defaultdb.labour AS l " +
-                    "JOIN defaultdb.labour_sub_skill AS s ON l.labour_id = s.labour_id " +
-                    "WHERE SOUNDEX(s.sub_skill_name) = SOUNDEX(:category) " +
-                    "OR LOWER(s.sub_skill_name) LIKE LOWER(CONCAT('%', :category, '%'))",
-
-            nativeQuery = true
+            value = "SELECT DISTINCT l FROM Labour l JOIN l.labourSubSkills s WHERE "
+                    + "SOUNDEX(s.subSkillName) = SOUNDEX(:category) OR "
+                    + "LOWER(s.subSkillName) LIKE LOWER(CONCAT('%', :category, '%'))",
+            countQuery = "SELECT COUNT(DISTINCT l.labourId) FROM Labour l JOIN l.labourSubSkills s WHERE "
+                    + "SOUNDEX(s.subSkillName) = SOUNDEX(:category) OR "
+                    + "LOWER(s.subSkillName) LIKE LOWER(CONCAT('%', :category, '%'))"
     )
     Page<Labour> findByLabourSubSkill(@Param("category") String category, Pageable pageable);
 

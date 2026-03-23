@@ -6,7 +6,10 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public interface MongoDocumentService {
-    
+
+    /** Map field on enterprise documents: category name → list of sub-services. */
+    String FIELD_SERVICES_OFFERED = "servicesOffered";
+
     CompletableFuture<ResponseDTO> createMongoDocument(String collectionName, Map<String, Object> data);
     
     CompletableFuture<ResponseDTO> findDocumentById(String collectionName, String documentId);
@@ -24,4 +27,10 @@ public interface MongoDocumentService {
     CompletableFuture<ResponseDTO> addFieldToDocument(String collectionName, String documentId, String fieldName, Object value);
     
     CompletableFuture<ResponseDTO> removeFieldFromDocument(String collectionName, String documentId, String fieldName);
+
+    /**
+     * Finds documents whose map field {@code fieldName} (e.g. {@code servicesOffered}) matches the search term:
+     * first by category (map key), then by sub-service in any category's list if no key match.
+     */
+    CompletableFuture<ResponseDTO> findDocumentsByServicesOffered(String collectionName, String fieldName, String searchTerm);
 } 

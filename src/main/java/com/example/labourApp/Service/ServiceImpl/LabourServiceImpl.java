@@ -6,6 +6,7 @@ import com.example.labourApp.Entity.sql.Review;
 import com.example.labourApp.Entity.sql.Bookings;
 import com.example.labourApp.Entity.sql.LabourSubSkill;
 import com.example.labourApp.Models.LabourDTO;
+import com.example.labourApp.EnumClass;
 import com.example.labourApp.Models.PaginationRequestDTO;
 import com.example.labourApp.Models.PaginationResponseDTO;
 import com.example.labourApp.Models.ResponseDTO;
@@ -14,10 +15,12 @@ import com.example.labourApp.Repository.sql.LabourRepository;
 import com.example.labourApp.Repository.sql.UserRepository;
 import com.example.labourApp.Service.LabourService;
 import com.example.labourApp.Service.MongoDocumentService;
+import static com.example.labourApp.Service.MongoDocumentService.FIELD_SERVICES_OFFERED;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -124,32 +127,122 @@ public class LabourServiceImpl implements LabourService {
     }
 
 
+    private static final int MAX_LABOUR_WINDOW_FETCH = 10_000;
+
+    /** How individual labours are loaded: primary skill query vs sub-skill fallback (same rule as before). */
+    private record LabourSearchMode(boolean usePrimarySkillQuery, long totalLabours) {}
+
+    private static final LabourSearchMode NO_LABOUR_DATA = new LabourSearchMode(true, 0L);
+
     @Async
     @Cacheable(key = "#category + '_' + #paginationRequestDTO.pageNumber + '_' + #paginationRequestDTO.pageSize + '_' + #paginationRequestDTO.sortBy + '_' + #paginationRequestDTO.sortOrder", value = "labourData")
     public CompletableFuture<PaginationResponseDTO> findLabourByCategory(PaginationRequestDTO paginationRequestDTO, String category) {
 
-        Integer pageNumber = paginationRequestDTO.getPageNumber();
-        Integer pageSize = paginationRequestDTO.getPageSize();
+        int pageNumber = paginationRequestDTO.getPageNumber() != null ? paginationRequestDTO.getPageNumber() : 0;
+        int pageSize = paginationRequestDTO.getPageSize() != null && paginationRequestDTO.getPageSize() > 0
+                ? paginationRequestDTO.getPageSize()
+                : EnumClass.PAGE_SIZE;
         String sortBy = paginationRequestDTO.getSortBy();
         String sortOrder = paginationRequestDTO.getSortOrder();
 
         Sort sort = sortOrder.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        Pageable p = PageRequest.of(pageNumber, pageSize, sort);
+        CompletableFuture<List<Map<String, Object>>> enterprisesFuture =
+                CompletableFuture.supplyAsync(() -> loadEnterprisesMatchingService(category), executorService);
 
-        Page<Labour> labourListPage = labourRepository.findByLabourSkill(category, p);
+        CompletableFuture<LabourSearchMode> labourMetaFuture =
+                CompletableFuture.supplyAsync(() -> resolveLabourSearchMode(category, sort), executorService)
+                        .exceptionally(ex -> NO_LABOUR_DATA);
 
-        List<Labour> labourList = labourListPage.getContent();
+        CompletableFuture.allOf(enterprisesFuture, labourMetaFuture).join();
 
-        if (labourList.isEmpty()) {
+        List<Map<String, Object>> enterprises = enterprisesFuture.join();
+        LabourSearchMode labourMode = labourMetaFuture.join();
 
-            labourListPage = labourRepository.findByLabourSubSkill(category, p);
-            labourList = labourListPage.getContent();
+        int enterpriseCount = enterprises.size();
+        long labourTotal = labourMode.totalLabours();
+        long totalElements = (long) enterpriseCount + labourTotal;
+
+        long rangeStart = (long) pageNumber * pageSize;
+        long rangeEnd = Math.min(rangeStart + pageSize, totalElements);
+
+        List<Object> pageItems = new ArrayList<>();
+        if (rangeStart < rangeEnd) {
+            int eFrom = (int) Math.min(rangeStart, enterpriseCount);
+            int eTo = (int) Math.min(rangeEnd, enterpriseCount);
+            if (eFrom < eTo) {
+                pageItems.addAll(enterprises.subList(eFrom, eTo));
+            }
+
+            int labourStart = (int) Math.max(0, rangeStart - enterpriseCount);
+            int labourEndExclusive = (int) Math.min(rangeEnd - enterpriseCount, labourTotal);
+            int labourCount = Math.max(0, labourEndExclusive - labourStart);
+            if (labourCount > 0) {
+                List<Labour> labourSlice = loadLabourWindow(category, sort, labourStart, labourCount, labourMode);
+                for (Labour labour : labourSlice) {
+                    pageItems.add(mapEntityToDto(labour));
+                }
+            }
         }
 
+        long totalPages = pageSize <= 0 ? 0 : (totalElements + pageSize - 1) / pageSize;
+        long endExclusive = (long) (pageNumber + 1) * pageSize;
+        boolean lastPage = totalElements == 0 || endExclusive >= totalElements;
 
-        List<LabourDTO> dtoList = labourList.stream().map(this::mapEntityToDto).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(new PaginationResponseDTO(dtoList, labourListPage.getNumber(), labourListPage.getSize(), labourListPage.getTotalElements(), labourListPage.getTotalPages(), labourListPage.isLast()));
+        return CompletableFuture.completedFuture(
+                new PaginationResponseDTO(pageItems, pageNumber, pageSize, totalElements, totalPages, lastPage));
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> loadEnterprisesMatchingService(String category) {
+        if (mongoDocumentService == null || category == null || category.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            ResponseDTO res = mongoDocumentService
+                    .findDocumentsByServicesOffered("enterprise", FIELD_SERVICES_OFFERED, category)
+                    .join();
+            if (Boolean.TRUE.equals(res.getHasError()) || res.getReturnValue() == null) {
+                return Collections.emptyList();
+            }
+            return (List<Map<String, Object>>) res.getReturnValue();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    private LabourSearchMode resolveLabourSearchMode(String category, Sort sort) {
+        try {
+            Page<Labour> skillProbe = labourRepository.findByLabourSkill(category, PageRequest.of(0, 1, sort));
+            long bySkill = skillProbe.getTotalElements();
+            if (bySkill > 0) {
+                return new LabourSearchMode(true, bySkill);
+            }
+            long bySub = labourRepository.findByLabourSubSkill(category, PageRequest.of(0, 1, sort)).getTotalElements();
+            return new LabourSearchMode(false, bySub);
+        } catch (DataAccessException e) {
+            return NO_LABOUR_DATA;
+        }
+    }
+
+    private List<Labour> loadLabourWindow(String category, Sort sort, int offset, int count, LabourSearchMode mode) {
+        if (count <= 0 || mode.totalLabours() <= 0) {
+            return Collections.emptyList();
+        }
+        try {
+            int fetchSize = Math.min(offset + count, MAX_LABOUR_WINDOW_FETCH);
+            Pageable fetchPage = PageRequest.of(0, Math.max(fetchSize, 1), sort);
+            Page<Labour> page = mode.usePrimarySkillQuery()
+                    ? labourRepository.findByLabourSkill(category, fetchPage)
+                    : labourRepository.findByLabourSubSkill(category, fetchPage);
+            List<Labour> chunk = page.getContent();
+            if (offset >= chunk.size()) {
+                return Collections.emptyList();
+            }
+            return new ArrayList<>(chunk.subList(offset, Math.min(offset + count, chunk.size())));
+        } catch (DataAccessException e) {
+            return Collections.emptyList();
+        }
     }
 
     @Async
