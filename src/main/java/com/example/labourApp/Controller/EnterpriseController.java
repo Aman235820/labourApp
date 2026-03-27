@@ -2,6 +2,7 @@ package com.example.labourApp.Controller;
 
 
 import com.example.labourApp.Models.EnterpriseDTO;
+import com.example.labourApp.Models.EnterpriseLabourDTO;
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Security.JwtHelper;
 import com.example.labourApp.Security.OtpService;
@@ -102,11 +103,11 @@ public class EnterpriseController {
     }
 
     @PatchMapping("/updateEnterpriseField/{id}")
-    public Callable<ResponseEntity<ResponseDTO>> updateEnterpriseField(@PathVariable String  id , @RequestBody Map<String,Object> updatedField) {
+    public Callable<ResponseEntity<ResponseDTO>> updateEnterpriseField(@PathVariable String id, @RequestBody Map<String, Object> updatedField) {
         return () -> {
 
             try {
-                CompletableFuture<ResponseDTO> res = enterpriseService.updateEnterpriseField(id,updatedField);
+                CompletableFuture<ResponseDTO> res = enterpriseService.updateEnterpriseField(id, updatedField);
                 return new ResponseEntity<>(res.get(), HttpStatus.OK);
             } catch (Exception ce) {
                 return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to update data : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
@@ -116,13 +117,29 @@ public class EnterpriseController {
     }
 
     @GetMapping("findEnterpriseById/{enterpriseId}")
-    public Callable<ResponseEntity<ResponseDTO>> findEnterpriseById(@PathVariable String enterpriseId){
+    public Callable<ResponseEntity<ResponseDTO>> findEnterpriseById(@PathVariable String enterpriseId) {
         return () -> {
             try {
                 CompletableFuture<ResponseDTO> res = enterpriseService.findEnterpriseById(enterpriseId);
                 return new ResponseEntity<>(res.get(), HttpStatus.OK);
             } catch (Exception ce) {
                 return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to get data : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
+    }
+
+
+    @PostMapping("enterpriseLabourOnboarding")
+    public Callable<ResponseEntity<ResponseDTO>> enterpriseLabourOnboarding(@RequestBody EnterpriseLabourDTO enterpriseLabourDTO) {
+        return () -> {
+            try {
+
+                   CompletableFuture<ResponseDTO> res = enterpriseService.enterpriseLabourOnboarding(enterpriseLabourDTO);
+
+                   return new ResponseEntity<>(res.get() , HttpStatus.OK);
+
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to Register : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
             }
         };
     }

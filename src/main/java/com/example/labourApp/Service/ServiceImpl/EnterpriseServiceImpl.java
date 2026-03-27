@@ -2,13 +2,18 @@ package com.example.labourApp.Service.ServiceImpl;
 
 
 import com.example.labourApp.Entity.mongo.Enterprise;
+import com.example.labourApp.Entity.sql.EnterpriseLabourEntity;
 import com.example.labourApp.Models.EnterpriseDTO;
+import com.example.labourApp.Models.EnterpriseLabourDTO;
 import com.example.labourApp.Models.ResponseDTO;
 import com.example.labourApp.Repository.mongo.EnterpriseRepository;
+import com.example.labourApp.Repository.sql.EnterpriseLabourRepository;
 import com.example.labourApp.Service.EnterpriseService;
 import com.example.labourApp.Service.MongoDocumentService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +32,11 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     @Autowired
     MongoDocumentService mongoDocumentService;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
+    @Autowired
+    private EnterpriseLabourRepository enterpriseLabourRepository;
 
     @Async
     public CompletableFuture<ResponseDTO> registerEnterprise(EnterpriseDTO details) {
@@ -79,29 +89,52 @@ public class EnterpriseServiceImpl implements EnterpriseService {
             // Call the generic mongo service to perform the update
             CompletableFuture<ResponseDTO> updateResult = mongoDocumentService.updateDocument("enterprise", id, updatedField);
             ResponseDTO result = updateResult.get();
-            
+
             if (!result.getHasError()) {
                 // Create response with only updated fields
                 Map<String, Object> responseData = new HashMap<>(updatedField);
                 responseData.put("id", id);
                 responseData.put("updatedAt", System.currentTimeMillis());
-                
-                return CompletableFuture.completedFuture(
-                    new ResponseDTO(responseData, false, "Enterprise data updated successfully!")
-                );
+
+                return CompletableFuture.completedFuture(new ResponseDTO(responseData, false, "Enterprise data updated successfully!"));
             } else {
                 return CompletableFuture.completedFuture(result);
             }
         } catch (Exception e) {
-            return CompletableFuture.completedFuture(
-                new ResponseDTO(null, true, "Failed to update enterprise: " + e.getMessage())
-            );
+            return CompletableFuture.completedFuture(new ResponseDTO(null, true, "Failed to update enterprise: " + e.getMessage()));
         }
     }
 
     @Async
-    public  CompletableFuture<ResponseDTO> findEnterpriseById(String enterpriseId){
-          return mongoDocumentService.findDocumentById("enterprise",enterpriseId);
+    public CompletableFuture<ResponseDTO> findEnterpriseById(String enterpriseId) {
+        return mongoDocumentService.findDocumentById("enterprise", enterpriseId);
+    }
+
+    @Async
+    public CompletableFuture<ResponseDTO> enterpriseLabourOnboarding(EnterpriseLabourDTO enterpriseLabourDTO) {
+
+
+        try {
+
+            boolean validEnterprise = enterpriseRepository.existsById(enterpriseLabourDTO.getEnterpriseId());
+
+            if (validEnterprise) {
+                EnterpriseLabourEntity e = modelMapper.map(enterpriseLabourDTO, EnterpriseLabourEntity.class);
+
+                enterpriseLabourRepository.save(e);
+
+                EnterpriseLabourDTO edto = modelMapper.map(e, EnterpriseLabourDTO.class);
+
+                return CompletableFuture.completedFuture(new ResponseDTO(edto , false , "Labour onboarded successfully !!"));
+
+            }
+
+            throw new Exception("Enterprise not registered !!");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
 

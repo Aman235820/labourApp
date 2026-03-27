@@ -21,7 +21,7 @@ public class LabourAppApplication {
 	public ModelMapper modelMapper(){
 		ModelMapper modelMapper = new ModelMapper();
 		modelMapper.getConfiguration()
-				.setMatchingStrategy(MatchingStrategies.STRICT)
+				.setMatchingStrategy(MatchingStrategies.LOOSE)
 				.setPropertyCondition(context -> context.getSource() != null);
 		return modelMapper;
 	}

@@ -1,6 +1,7 @@
 package com.example.labourApp.Service;
 
 import com.example.labourApp.Models.EnterpriseDTO;
+import com.example.labourApp.Models.EnterpriseLabourDTO;
 import com.example.labourApp.Models.ResponseDTO;
 
 import java.util.Map;
@@ -14,4 +15,6 @@ public interface EnterpriseService {
     CompletableFuture<ResponseDTO> updateEnterpriseField(String id, Map<String, Object> updatedField);
 
     CompletableFuture<ResponseDTO> findEnterpriseById(String enterpriseId);
+
+    CompletableFuture<ResponseDTO> enterpriseLabourOnboarding(EnterpriseLabourDTO enterpriseLabourDTO);
 }
