@@ -9,5 +9,7 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/labourApp-0.0.1-SNAPSHOT.jar labourappdocker.jar
-EXPOSE 8080
+# Render (and similar) inject PORT; prod profile uses server.port=${PORT:...} and real DB URIs from env.
+ENV SPRING_PROFILES_ACTIVE=prod
+EXPOSE 4000
 ENTRYPOINT ["java", "-jar", "/app/labourappdocker.jar"]
