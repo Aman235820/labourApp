@@ -134,12 +134,28 @@ public class EnterpriseController {
         return () -> {
             try {
 
-                   CompletableFuture<ResponseDTO> res = enterpriseService.enterpriseLabourOnboarding(enterpriseLabourDTO);
+                CompletableFuture<ResponseDTO> res = enterpriseService.enterpriseLabourOnboarding(enterpriseLabourDTO);
 
-                   return new ResponseEntity<>(res.get() , HttpStatus.OK);
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
 
             } catch (Exception ce) {
                 return new ResponseEntity<>(new ResponseDTO(null, true, "Failed to Register : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        };
+    }
+
+    @GetMapping("findLabourByEnterpriseID/{enterpriseId}")
+    public Callable<ResponseEntity<ResponseDTO>> findLabourByEnterpriseID(@PathVariable String enterpriseId) {
+        return () -> {
+            try {
+
+
+                CompletableFuture<ResponseDTO> res = enterpriseService.findLabourByEnterpriseID(enterpriseId);
+
+                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+
+            } catch (Exception ce) {
+                return new ResponseEntity<>(new ResponseDTO(null, true, "Failed : " + ce.getMessage()), HttpStatus.BAD_REQUEST);
             }
         };
     }
