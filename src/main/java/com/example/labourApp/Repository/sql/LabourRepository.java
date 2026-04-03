@@ -17,6 +17,9 @@ public interface LabourRepository extends JpaRepository<Labour, Integer> {
     @Query("SELECT l FROM Labour l WHERE SOUNDEX(LOWER(l.labourSkill)) = SOUNDEX(LOWER(CONCAT('%', :category, '%')))")
     Page<Labour> findByLabourSkill(@Param("category") String category, Pageable p);
 
+    @Query("SELECT l FROM Labour l WHERE LOWER(l.labourSkill) = LOWER(:category)")
+    Page<Labour> findByLabourSkillExact(@Param("category") String category, Pageable p);
+
     boolean existsByLabourMobileNo(String mobileNo);
 
     @Query("SELECT l FROM Labour l WHERE l.labourMobileNo = :mobileNumber")
@@ -36,6 +39,12 @@ public interface LabourRepository extends JpaRepository<Labour, Integer> {
                     + "LOWER(s.subSkillName) LIKE LOWER(CONCAT('%', :category, '%'))"
     )
     Page<Labour> findByLabourSubSkill(@Param("category") String category, Pageable pageable);
+
+    @Query(
+            value = "SELECT DISTINCT l FROM Labour l JOIN l.labourSubSkills s WHERE LOWER(s.subSkillName) = LOWER(:category)",
+            countQuery = "SELECT COUNT(DISTINCT l.labourId) FROM Labour l JOIN l.labourSubSkills s WHERE LOWER(s.subSkillName) = LOWER(:category)"
+    )
+    Page<Labour> findByLabourSubSkillExact(@Param("category") String category, Pageable pageable);
 
 //            | Part         | Why                                                             |
 //            | ------------ | --------------------------------------------------------------- |

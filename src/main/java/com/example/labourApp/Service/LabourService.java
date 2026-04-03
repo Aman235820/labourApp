@@ -12,7 +12,7 @@ public interface LabourService {
 
     CompletableFuture<ResponseDTO> registerLabour(LabourDTO details);
 
-    CompletableFuture<PaginationResponseDTO> findLabourByCategory(PaginationRequestDTO paginationRequestDTO, String category);
+    CompletableFuture<PaginationResponseDTO> findLabourByCategory(PaginationRequestDTO paginationRequestDTO, String category, boolean isExactMatch);
 
     CompletableFuture<PaginationResponseDTO> findAllLabours(PaginationRequestDTO paginationRequestDTO);
 

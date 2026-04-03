@@ -386,6 +386,74 @@ public class MongoDocumentServiceImpl implements MongoDocumentService {
         return false;
     }
 
+    /**
+     * Strings that appear as list elements are treated as sub-services; map keys as services/categories.
+     * Match sub-services first (exact, case-insensitive), then service keys.
+     */
+    private static void collectSubServicesAndServiceKeys(Object node, Set<String> subStrings, Set<String> serviceKeys) {
+        if (node == null) {
+            return;
+        }
+        if (node instanceof List<?> list) {
+            for (Object o : list) {
+                if (o instanceof String s) {
+                    String t = s.trim();
+                    if (!t.isEmpty()) {
+                        subStrings.add(t);
+                    }
+                } else {
+                    collectSubServicesAndServiceKeys(o, subStrings, serviceKeys);
+                }
+            }
+            return;
+        }
+        if (node instanceof Map<?, ?> map) {
+            for (Map.Entry<?, ?> e : map.entrySet()) {
+                if (e.getKey() != null) {
+                    String k = e.getKey().toString().trim();
+                    if (!k.isEmpty()) {
+                        serviceKeys.add(k);
+                    }
+                }
+                collectSubServicesAndServiceKeys(e.getValue(), subStrings, serviceKeys);
+            }
+            return;
+        }
+        if (node instanceof Document doc) {
+            for (String key : doc.keySet()) {
+                String k = key.trim();
+                if (!k.isEmpty()) {
+                    serviceKeys.add(k);
+                }
+                collectSubServicesAndServiceKeys(doc.get(key), subStrings, serviceKeys);
+            }
+        }
+    }
+
+    private static boolean servicesOfferedExactMatch(Object servicesOffered, String rawSearch) {
+        if (servicesOffered == null || rawSearch == null) {
+            return false;
+        }
+        String term = rawSearch.trim();
+        if (term.isEmpty()) {
+            return false;
+        }
+        Set<String> subStrings = new LinkedHashSet<>();
+        Set<String> serviceKeys = new LinkedHashSet<>();
+        collectSubServicesAndServiceKeys(servicesOffered, subStrings, serviceKeys);
+        for (String sub : subStrings) {
+            if (sub.equalsIgnoreCase(term)) {
+                return true;
+            }
+        }
+        for (String svc : serviceKeys) {
+            if (svc.equalsIgnoreCase(term)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static List<Map<String, Object>> documentsToMapsWithStringIds(List<Document> documents) {
         List<Map<String, Object>> resultList = new ArrayList<>();
         for (Document doc : documents) {
@@ -433,6 +501,44 @@ public class MongoDocumentServiceImpl implements MongoDocumentService {
         } catch (Exception e) {
             return CompletableFuture.completedFuture(
                     new ResponseDTO(null, true, "Failed to find documents by services offered: " + e.getMessage()));
+        }
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<ResponseDTO> findDocumentsByServicesOfferedExact(String collectionName, String fieldName, String searchTerm) {
+        try {
+            if (fieldName == null || fieldName.trim().isEmpty()) {
+                return CompletableFuture.completedFuture(
+                        new ResponseDTO(new ArrayList<>(), false, "No field name provided"));
+            }
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return CompletableFuture.completedFuture(
+                        new ResponseDTO(new ArrayList<>(), false, "No search term provided"));
+            }
+            String mapField = fieldName.trim();
+            String term = searchTerm.trim();
+            List<Document> candidates = new ArrayList<>();
+            getCollection(collectionName)
+                    .find(Filters.and(Filters.exists(mapField), Filters.ne(mapField, null)))
+                    .into(candidates);
+
+            List<Document> documents = new ArrayList<>();
+            for (Document doc : candidates) {
+                if (servicesOfferedExactMatch(doc.get(mapField), term)) {
+                    documents.add(doc);
+                }
+            }
+
+            List<Map<String, Object>> resultList = documentsToMapsWithStringIds(documents);
+            String message = resultList.isEmpty()
+                    ? "No documents matched this service or sub-service (exact)"
+                    : "Documents matched (exact sub-service or service): " + resultList.size();
+
+            return CompletableFuture.completedFuture(new ResponseDTO(resultList, false, message));
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(
+                    new ResponseDTO(null, true, "Failed to find documents by services offered (exact): " + e.getMessage()));
         }
     }
 } 

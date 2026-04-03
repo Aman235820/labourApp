@@ -33,4 +33,10 @@ public interface MongoDocumentService {
      * first by category (map key), then by sub-service in any category's list if no key match.
      */
     CompletableFuture<ResponseDTO> findDocumentsByServicesOffered(String collectionName, String fieldName, String searchTerm);
+
+    /**
+     * Same as {@link #findDocumentsByServicesOffered} but only exact (case-insensitive) sub-service strings,
+     * then exact service/category keys if no sub-service matches.
+     */
+    CompletableFuture<ResponseDTO> findDocumentsByServicesOfferedExact(String collectionName, String fieldName, String searchTerm);
 } 

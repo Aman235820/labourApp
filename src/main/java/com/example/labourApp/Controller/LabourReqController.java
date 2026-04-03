@@ -21,8 +21,10 @@ public class LabourReqController {
     private LabourService labourService;
 
     @PostMapping("/findByCategory")
-    public Callable<ResponseEntity<PaginationResponseDTO>> findByCategory(@RequestParam String category,
-                                                                          @RequestBody PaginationRequestDTO paginationRequestDTO) {
+    public Callable<ResponseEntity<PaginationResponseDTO>> findByCategory(
+            @RequestParam String category,
+            @RequestParam(required = false, defaultValue = "false") boolean isExactMatch,
+            @RequestBody PaginationRequestDTO paginationRequestDTO) {
         return () -> {
             try {
 
@@ -32,7 +34,7 @@ public class LabourReqController {
                     response = labourService.findAllLabours(paginationRequestDTO);
                 }
                 else{
-                   response = labourService.findLabourByCategory(paginationRequestDTO, category);
+                   response = labourService.findLabourByCategory(paginationRequestDTO, category, isExactMatch);
                 }
                 return new ResponseEntity<>(response.get(), HttpStatus.OK);
 
@@ -42,6 +44,9 @@ public class LabourReqController {
         };
 
     }
+
+
+
 
 
 

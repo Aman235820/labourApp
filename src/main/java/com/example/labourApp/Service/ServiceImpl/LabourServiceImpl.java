@@ -135,8 +135,8 @@ public class LabourServiceImpl implements LabourService {
     private static final LabourSearchMode NO_LABOUR_DATA = new LabourSearchMode(true, 0L);
 
     @Async
-    @Cacheable(key = "#category + '_' + #paginationRequestDTO.pageNumber + '_' + #paginationRequestDTO.pageSize + '_' + #paginationRequestDTO.sortBy + '_' + #paginationRequestDTO.sortOrder", value = "labourData")
-    public CompletableFuture<PaginationResponseDTO> findLabourByCategory(PaginationRequestDTO paginationRequestDTO, String category) {
+    @Cacheable(key = "#category + '_' + #paginationRequestDTO.pageNumber + '_' + #paginationRequestDTO.pageSize + '_' + #paginationRequestDTO.sortBy + '_' + #paginationRequestDTO.sortOrder + '_' + #isExactMatch", value = "labourData")
+    public CompletableFuture<PaginationResponseDTO> findLabourByCategory(PaginationRequestDTO paginationRequestDTO, String category, boolean isExactMatch) {
 
         int pageNumber = paginationRequestDTO.getPageNumber() != null ? paginationRequestDTO.getPageNumber() : 0;
         int pageSize = paginationRequestDTO.getPageSize() != null && paginationRequestDTO.getPageSize() > 0
@@ -147,12 +147,13 @@ public class LabourServiceImpl implements LabourService {
 
         Sort sort = sortOrder.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        CompletableFuture<List<Map<String, Object>>> enterprisesFuture =
-                CompletableFuture.supplyAsync(() -> loadEnterprisesMatchingService(category), executorService);
+        CompletableFuture<List<Map<String, Object>>> enterprisesFuture = CompletableFuture.supplyAsync(
+                () -> isExactMatch ? loadEnterprisesMatchingServiceExact(category) : loadEnterprisesMatchingService(category),
+                executorService);
 
-        CompletableFuture<LabourSearchMode> labourMetaFuture =
-                CompletableFuture.supplyAsync(() -> resolveLabourSearchMode(category, sort), executorService)
-                        .exceptionally(ex -> NO_LABOUR_DATA);
+        CompletableFuture<LabourSearchMode> labourMetaFuture = CompletableFuture.supplyAsync(
+                () -> isExactMatch ? resolveLabourSearchModeExact(category, sort) : resolveLabourSearchMode(category, sort),
+                executorService).exceptionally(ex -> NO_LABOUR_DATA);
 
         CompletableFuture.allOf(enterprisesFuture, labourMetaFuture).join();
 
@@ -178,7 +179,7 @@ public class LabourServiceImpl implements LabourService {
             int labourEndExclusive = (int) Math.min(rangeEnd - enterpriseCount, labourTotal);
             int labourCount = Math.max(0, labourEndExclusive - labourStart);
             if (labourCount > 0) {
-                List<Labour> labourSlice = loadLabourWindow(category, sort, labourStart, labourCount, labourMode);
+                List<Labour> labourSlice = loadLabourWindow(category, sort, labourStart, labourCount, labourMode, isExactMatch);
                 for (Labour labour : labourSlice) {
                     pageItems.add(mapEntityToDto(labour));
                 }
@@ -211,6 +212,24 @@ public class LabourServiceImpl implements LabourService {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> loadEnterprisesMatchingServiceExact(String category) {
+        if (mongoDocumentService == null || category == null || category.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            ResponseDTO res = mongoDocumentService
+                    .findDocumentsByServicesOfferedExact("enterprise", FIELD_SERVICES_OFFERED, category)
+                    .join();
+            if (Boolean.TRUE.equals(res.getHasError()) || res.getReturnValue() == null) {
+                return Collections.emptyList();
+            }
+            return (List<Map<String, Object>>) res.getReturnValue();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
     private LabourSearchMode resolveLabourSearchMode(String category, Sort sort) {
         try {
             Page<Labour> skillProbe = labourRepository.findByLabourSkill(category, PageRequest.of(0, 1, sort));
@@ -225,16 +244,42 @@ public class LabourServiceImpl implements LabourService {
         }
     }
 
-    private List<Labour> loadLabourWindow(String category, Sort sort, int offset, int count, LabourSearchMode mode) {
+    /**
+     * Exact match: prefer sub-skill, then primary skill (inverse order of fuzzy {@link #resolveLabourSearchMode}).
+     */
+    private LabourSearchMode resolveLabourSearchModeExact(String category, Sort sort) {
+        try {
+            Page<Labour> subProbe = labourRepository.findByLabourSubSkillExact(category, PageRequest.of(0, 1, sort));
+            long bySub = subProbe.getTotalElements();
+            if (bySub > 0) {
+                return new LabourSearchMode(false, bySub);
+            }
+            Page<Labour> skillProbe = labourRepository.findByLabourSkillExact(category, PageRequest.of(0, 1, sort));
+            long bySkill = skillProbe.getTotalElements();
+            if (bySkill > 0) {
+                return new LabourSearchMode(true, bySkill);
+            }
+            return NO_LABOUR_DATA;
+        } catch (DataAccessException e) {
+            return NO_LABOUR_DATA;
+        }
+    }
+
+    private List<Labour> loadLabourWindow(String category, Sort sort, int offset, int count, LabourSearchMode mode,
+                                          boolean exactMatch) {
         if (count <= 0 || mode.totalLabours() <= 0) {
             return Collections.emptyList();
         }
         try {
             int fetchSize = Math.min(offset + count, MAX_LABOUR_WINDOW_FETCH);
             Pageable fetchPage = PageRequest.of(0, Math.max(fetchSize, 1), sort);
-            Page<Labour> page = mode.usePrimarySkillQuery()
+            Page<Labour> page = exactMatch
+                    ? (mode.usePrimarySkillQuery()
+                    ? labourRepository.findByLabourSkillExact(category, fetchPage)
+                    : labourRepository.findByLabourSubSkillExact(category, fetchPage))
+                    : (mode.usePrimarySkillQuery()
                     ? labourRepository.findByLabourSkill(category, fetchPage)
-                    : labourRepository.findByLabourSubSkill(category, fetchPage);
+                    : labourRepository.findByLabourSubSkill(category, fetchPage));
             List<Labour> chunk = page.getContent();
             if (offset >= chunk.size()) {
                 return Collections.emptyList();
